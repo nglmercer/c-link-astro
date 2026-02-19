@@ -46,7 +46,7 @@ function getDomain(url: string): string {
     <span class="link-count">{links.length} / 10 links</span>
   </div>
 
-  <div id="links-container" class="links-container">
+  <div id="links-container" class="links-container" data-initial-links={JSON.stringify(links)}>
     {links.length === 0 ? (
       <div class="empty-state">
         <span class="material-symbols-outlined empty-icon">link_off</span>

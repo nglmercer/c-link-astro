@@ -355,21 +355,28 @@ export function applyTheme(themeName: ThemeName = DEFAULT_THEME): void {
 export function updateProfileDisplay(profile: UserProfile): void {
   // Update display name
   const displayNameEl = document.getElementById('display-name')
-  if (profile.displayName && displayNameEl) {
-    displayNameEl.textContent = profile.displayName
+  if (displayNameEl) {
+    const username = profile.username || 'user'
+    displayNameEl.textContent = profile.displayName || `@${username}`
   }
   
   // Update bio
   const bioEl = document.getElementById('bio')
-  if (profile.bio && bioEl) {
-    bioEl.textContent = profile.bio
-    bioEl.style.display = 'block'
+  if (bioEl) {
+    if (profile.bio) {
+      bioEl.textContent = profile.bio
+      bioEl.style.display = 'block'
+    } else {
+      bioEl.textContent = ''
+      bioEl.style.display = 'none'
+    }
   }
   
   // Update avatar
   const avatarEl = document.getElementById('avatar')
-  if (avatarEl && profile.displayName) {
-    avatarEl.textContent = getInitials(profile.displayName)
+  if (avatarEl) {
+    const text = profile.displayName || profile.username || '?'
+    avatarEl.textContent = text.charAt(0).toUpperCase()
   }
 }
 

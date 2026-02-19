@@ -50,13 +50,15 @@ const hasClaimedUsername = !!profile?.username
   <SignedIn>
     <div class="dashboard">
       <div class="dashboard-header">
-        <div class="header-content">
-          <h1>Dashboard</h1>
-          <p>Manage your profile and links</p>
+        <div class="header-info">
+          <h1>My C-Link</h1>
+          <p>Manage your personal link tree and profile identity.</p>
         </div>
         <div class="header-actions">
-          <a href={`/${username}`} target="_blank" class="btn-view">
-            View Profile →
+          <a href={`/${username}`} target="_blank" class="btn-profile-link">
+            <span class="material-symbols-outlined">link</span>
+            <span>c-link.com/{username}</span>
+            <span class="material-symbols-outlined share-icon">open_in_new</span>
           </a>
         </div>
       </div>
@@ -86,12 +88,7 @@ const hasClaimedUsername = !!profile?.username
         </div>
 
         <div class="section preview-section">
-          <ProfilePreview 
-            username={username}
-            displayName={profile?.displayName}
-            bio={profile?.bio}
-            links={initialLinks}
-          />
+          <ProfilePreview username={username} />
         </div>
       </div>
 
@@ -114,8 +111,12 @@ const hasClaimedUsername = !!profile?.username
   // State
   let isCheckingUsername = false;
   let checkTimeout: ReturnType<typeof setTimeout> | null = null;
-  let currentLinks: Link[] = [];
+  let currentLinks: Link[] = JSON.parse(document.getElementById('links-container')?.getAttribute('data-initial-links') || '[]');
   let currentTheme = (document.querySelector('.theme-option.active') as HTMLElement)?.dataset.theme || 'gradient';
+
+  // Expose for preview iframe
+  (window as any).currentLinks = currentLinks;
+  (window as any).currentTheme = currentTheme;
 
   // Elements
   const usernameInput = document.getElementById('username') as HTMLInputElement;
@@ -311,42 +312,52 @@ const hasClaimedUsername = !!profile?.username
   .dashboard-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2.5rem;
-    padding: 0.5rem 0;
+    align-items: flex-end;
+    margin-bottom: 3rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f3f4f6;
   }
 
-  .header-content h1 {
-    margin: 0 0 0.25rem;
-    font-size: 1.75rem;
+  .header-info h1 {
+    margin: 0 0 0.5rem;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.02em;
   }
 
-  .header-content p {
+  .header-info p {
     margin: 0;
     color: #6b7280;
+    font-size: 1rem;
   }
 
-  .btn-view {
-    background: white;
-    color: #4b5563;
-    border: 1px solid #e5e7eb;
-    padding: 0.625rem 1.25rem;
-    border-radius: 12px;
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 600;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  .btn-profile-link {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    background: white;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+    padding: 0.75rem 1.25rem;
+    border-radius: 14px;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 
-  .btn-view:hover {
-    background: #f9fafb;
+  .btn-profile-link:hover {
     border-color: #d1d5db;
+    background: #f9fafb;
     transform: translateY(-1px);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  }
+
+  .btn-profile-link .share-icon {
+    font-size: 1.1rem;
+    color: #9ca3af;
   }
 
   .claim-banner {

@@ -113,6 +113,8 @@ const { profile, seoTitle, seoDescription } = await getProfileForSEO(Astro, user
   window.addEventListener('message', (event) => {
     if (event.data.type === 'theme-updated') {
       applyTheme(event.data.theme);
+    } else if (event.data.type === 'profile-updated') {
+      displayProfile(event.data.profile);
     }
   });
 </script>

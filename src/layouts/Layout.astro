@@ -90,63 +90,92 @@ const siteName = 'C-Link'
 	}
 
 	header {
-		background: white;
-		border-bottom: 1px solid #eee;
-		padding: 0.75rem 1.5rem;
+		background: rgba(255, 255, 255, 0.8);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+		padding: 0.75rem 0;
 		position: sticky;
 		top: 0;
 		z-index: 100;
 	}
 
 	.header-content {
-		max-width: 1200px;
+		max-width: 1400px;
 		margin: 0 auto;
+		padding: 0 2rem;
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
 	}
 
 	.logo {
-		font-size: 1.25rem;
-		font-weight: 700;
+		font-size: 1.5rem;
+		font-weight: 800;
 		color: #111;
 		text-decoration: none;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
 		background-clip: text;
+		letter-spacing: -0.02em;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.logo::before {
+		content: '🔗';
+		font-size: 1.25rem;
+		-webkit-text-fill-color: initial;
 	}
 
 	nav {
 		display: flex;
 		align-items: center;
-		gap: 1rem;
+		gap: 1.5rem;
 	}
 
 	.nav-link {
-		color: #666;
+		color: #4b5563;
 		text-decoration: none;
 		font-size: 0.95rem;
-		transition: color 0.2s;
+		font-weight: 600;
+		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		padding: 0.5rem 1rem;
+		border-radius: 10px;
 	}
 
 	.nav-link:hover {
-		color: #111;
+		color: #111827;
+		background: #f3f4f6;
 	}
 
 	.nav-btn {
-		background: #2563eb;
+		background: #111827;
 		color: white;
 		border: none;
-		padding: 0.5rem 1rem;
-		border-radius: 6px;
+		padding: 0.625rem 1.25rem;
+		border-radius: 12px;
 		cursor: pointer;
-		font-size: 0.9rem;
-		font-weight: 500;
-		transition: background 0.2s;
+		font-size: 0.95rem;
+		font-weight: 700;
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 	}
 
 	.nav-btn:hover {
-		background: #1d4ed8;
+		background: #000;
+		transform: translateY(-1px);
+		box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 	}
+
+  @media (max-width: 640px) {
+    .header-content {
+      padding: 0 1rem;
+    }
+    .nav-link {
+      display: none;
+    }
+  }
 </style>
