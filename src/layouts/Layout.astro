@@ -1,5 +1,6 @@
 ---
 import { SignedIn, SignedOut, UserButton, SignInButton } from '@clerk/astro/components'
+import ThemeToggle from '../components/ThemeToggle.astro'
 import '../styles/main.css'
 
 interface Props {
@@ -59,6 +60,25 @@ const siteName = 'C-Link'
 		
 		<!-- Color Scheme -->
 		<meta name="color-scheme" content="light dark" />
+		<script is:inline>
+			const theme = (() => {
+				if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+					return localStorage.getItem('theme');
+				}
+				if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+					return 'dark';
+				}
+				return 'light';
+			})();
+		
+			if (theme === 'dark') {
+				document.documentElement.classList.add('dark');
+				document.documentElement.setAttribute('data-theme', 'dark');
+			} else {
+				document.documentElement.classList.remove('dark');
+				document.documentElement.setAttribute('data-theme', 'light');
+			}
+		</script>
 	</head>
 	<body>
 		{showHeader && (
@@ -69,6 +89,7 @@ const siteName = 'C-Link'
             <span class="logo-text">C-Link</span>
           </a>
           <nav class="nav">
+            <ThemeToggle />
             <SignedOut>
               <SignInButton mode="modal">
                 <button class="btn btn-primary">Sign In</button>
@@ -86,67 +107,4 @@ const siteName = 'C-Link'
 	</body>
 </html>
 
-<style>
-	/* Header Styles */
-	.header {
-		background: var(--bg-primary);
-		border-bottom: 1px solid var(--border-primary);
-		padding: var(--spacing-3) 0;
-		position: sticky;
-		top: 0;
-		z-index: var(--z-sticky);
-		transition: background-color var(--transition-smooth), border-color var(--transition-smooth);
-	}
 
-	.logo {
-		display: flex;
-		align-items: center;
-		gap: var(--spacing-2);
-		font-size: var(--font-size-xl);
-		font-weight: var(--font-weight-extrabold);
-		text-decoration: none;
-		letter-spacing: -0.02em;
-	}
-
-	.logo-icon {
-		font-size: var(--font-size-lg);
-		-webkit-text-fill-color: initial;
-	}
-
-	.logo-text {
-		background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-	}
-
-	.nav {
-		display: flex;
-		align-items: center;
-		gap: var(--spacing-4);
-	}
-
-	.nav-link {
-		color: var(--text-secondary);
-		text-decoration: none;
-		font-size: var(--font-size-sm);
-		font-weight: var(--font-weight-semibold);
-		transition: all var(--transition-fast);
-		padding: var(--spacing-2) var(--spacing-4);
-		border-radius: var(--radius-lg);
-	}
-
-	.nav-link:hover {
-		color: var(--text-primary);
-		background: var(--bg-secondary);
-	}
-
-	@media (max-width: 640px) {
-		.header-content {
-			padding: 0 var(--spacing-4);
-		}
-		.nav-link {
-			display: none;
-		}
-	}
-</style>

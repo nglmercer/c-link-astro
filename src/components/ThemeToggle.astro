@@ -30,7 +30,7 @@ const { class: className = '' } = Astro.props;
 
 <script>
   // Theme management
-  const THEME_KEY = 'clink-theme';
+  const THEME_KEY = 'theme';
   const DARK_THEME = 'dark';
   const LIGHT_THEME = 'light';
 
@@ -57,7 +57,7 @@ const { class: className = '' } = Astro.props;
       html.setAttribute('data-theme', DARK_THEME);
       html.classList.add(DARK_THEME);
     } else {
-      html.removeAttribute('data-theme');
+      html.setAttribute('data-theme', LIGHT_THEME);
       html.classList.remove(DARK_THEME);
     }
     
