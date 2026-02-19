@@ -18,7 +18,7 @@ import { themes } from '../lib/profile'
 ---
 
 <div class="profile-form">
-  <div class="form-group">
+  <div class="form-field">
     <label for="username">Username</label>
     <div class="username-input-group">
       <span class="prefix">clink.social/</span>
@@ -35,26 +35,28 @@ import { themes } from '../lib/profile'
     <p id="username-status" class="username-status"></p>
   </div>
 
-  <div class="form-group">
+  <div class="form-field">
     <label for="displayName">Display Name</label>
     <input 
       type="text" 
       id="displayName" 
+      class="form-input"
       value={displayName} 
       placeholder="Your name"
     />
   </div>
 
-  <div class="form-group">
+  <div class="form-field">
     <label for="bio">Bio</label>
     <textarea 
       id="bio" 
+      class="form-textarea"
       placeholder="Tell people about yourself" 
       rows="3"
     >{bio}</textarea>
   </div>
 
-  <div class="form-group">
+  <div class="form-field">
     <label>Background Theme</label>
     <div class="theme-grid" id="theme-selector">
       {Object.entries(themes).map(([name, config]) => (
@@ -62,10 +64,10 @@ import { themes } from '../lib/profile'
           type="button" 
           class={`theme-option ${theme === name ? 'active' : ''}`}
           data-theme={name}
-          title={name}
+          title={config.name}
         >
           <div class="theme-preview" style={`background: ${config.background}`}></div>
-          <span class="theme-name">{name}</span>
+          <span class="theme-name">{config.name}</span>
         </button>
       ))}
     </div>
