@@ -28,6 +28,9 @@ function getPlatformIcon(url: string): string {
   if (domain.includes('twitch')) return 'sports_esports';
   if (domain.includes('reddit')) return 'forum';
   if (domain.includes('medium')) return 'article';
+  if (domain.includes('spotify')) return 'music_note';
+  if (domain.includes('email')) return 'email';
+  if (domain.includes('figma')) return 'design_services';
   return 'link';
 }
 
@@ -578,8 +581,8 @@ function getDomain(url: string): string {
   }
 
   .link-card:hover {
-    border-color: #e5e7eb;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.04);
+    border-color: #2563eb40;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
     transform: translateY(-2px);
   }
 
@@ -592,8 +595,8 @@ function getDomain(url: string): string {
   .link-card-header {
     display: flex;
     align-items: center;
-    padding: 0.875rem 1.25rem;
-    background: #fafafa;
+    padding: 0.625rem 1rem;
+    background: #fcfcfc;
     border-bottom: 1px solid #f3f4f6;
   }
 
@@ -650,22 +653,21 @@ function getDomain(url: string): string {
   .link-preview-mini {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
-    padding: 1.25rem;
+    gap: 1rem;
+    padding: 1rem;
   }
 
 
   .preview-icon {
-    width: 48px;
-    height: 48px;
+    width: 42px;
+    height: 42px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: white;
-    border: 1px solid #f3f4f6;
-    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 10px;
     flex-shrink: 0;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   }
 
   .preview-icon .material-symbols-outlined {

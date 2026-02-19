@@ -13,10 +13,16 @@ export interface PlatformIcon {
 }
 
 export interface Theme {
+  name: string
   background: string
   cardBg: string
+  cardBorder: string
   text: string
   subtext: string
+  accent: string
+  glass?: boolean
+  buttonBg?: string
+  buttonText?: string
 }
 
 export interface ThemeConfig {
@@ -29,64 +35,100 @@ export interface ThemeConfig {
 
 export const themes: ThemeConfig = {
   gradient: {
+    name: 'Gradient Pulse',
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    cardBg: 'rgba(255, 255, 255, 0.95)',
-    text: '#1f2937',
-    subtext: '#6b7280'
+    cardBg: 'rgba(255, 255, 255, 0.1)',
+    cardBorder: 'rgba(255, 255, 255, 0.2)',
+    text: '#ffffff',
+    subtext: 'rgba(255, 255, 255, 0.7)',
+    accent: '#ffffff',
+    glass: true
   },
   ocean: {
+    name: 'Deep Ocean',
     background: 'linear-gradient(180deg, #0c1929 0%, #1a365d 100%)',
-    cardBg: 'rgba(255, 255, 255, 0.1)',
+    cardBg: 'rgba(255, 255, 255, 0.05)',
+    cardBorder: 'rgba(255, 255, 255, 0.1)',
     text: '#ffffff',
-    subtext: '#94a3b8'
+    subtext: '#94a3b8',
+    accent: '#38bdf8',
+    glass: true
   },
   sunset: {
+    name: 'Sunset Glass',
     background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    cardBg: 'rgba(255, 255, 255, 0.95)',
-    text: '#1f2937',
-    subtext: '#6b7280'
+    cardBg: 'rgba(255, 255, 255, 0.15)',
+    cardBorder: 'rgba(255, 255, 255, 0.25)',
+    text: '#ffffff',
+    subtext: 'rgba(255, 255, 255, 0.8)',
+    accent: '#ffffff',
+    glass: true
   },
   forest: {
+    name: 'Emerald Mist',
     background: 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)',
-    cardBg: 'rgba(255, 255, 255, 0.95)',
-    text: '#1f2937',
-    subtext: '#6b7280'
+    cardBg: 'rgba(255, 255, 255, 0.1)',
+    cardBorder: 'rgba(255, 255, 255, 0.2)',
+    text: '#ffffff',
+    subtext: '#d1fae5',
+    accent: '#6ee7b7',
+    glass: true
   },
   dark: {
-    background: 'linear-gradient(180deg, #111827 0%, #1f2937 100%)',
-    cardBg: 'rgba(31, 41, 55, 0.8)',
-    text: '#f9fafb',
-    subtext: '#9ca3af'
+    name: 'Onyx',
+    background: '#0f172a',
+    cardBg: 'rgba(30, 41, 59, 0.5)',
+    cardBorder: 'rgba(51, 65, 85, 0.5)',
+    text: '#f8fafc',
+    subtext: '#94a3b8',
+    accent: '#38bdf8'
   },
   light: {
-    background: 'linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%)',
+    name: 'Snowfall',
+    background: '#f8fafc',
     cardBg: '#ffffff',
-    text: '#111827',
-    subtext: '#6b7280'
-  },
-  midnight: {
-    background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
-    cardBg: 'rgba(30, 41, 59, 0.7)',
-    text: '#f8fafc',
-    subtext: '#94a3b8'
+    cardBorder: '#e2e8f0',
+    text: '#0f172a',
+    subtext: '#64748b',
+    accent: '#2563eb'
   },
   cyberpunk: {
-    background: 'linear-gradient(135deg, #2e1065 0%, #701a75 50%, #4c1d95 100%)',
-    cardBg: 'rgba(255, 255, 255, 0.05)',
-    text: '#f5d0fe',
-    subtext: '#d8b4fe'
+    name: 'Neon Night',
+    background: '#020617',
+    cardBg: 'rgba(15, 23, 42, 0.8)',
+    cardBorder: '#f472b6',
+    text: '#fdf2f8',
+    subtext: '#f472b6',
+    accent: '#f472b6'
+  },
+  midnight: {
+    name: 'Midnight Bloom',
+    background: 'linear-gradient(135deg, #020617 0%, #1e1b4b 100%)',
+    cardBg: 'rgba(255, 255, 255, 0.03)',
+    cardBorder: 'rgba(255, 255, 255, 0.1)',
+    text: '#f8fafc',
+    subtext: '#818cf8',
+    accent: '#c084fc',
+    glass: true
   },
   marshmallow: {
-    background: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
-    cardBg: 'rgba(255, 255, 255, 0.8)',
+    name: 'Pastel Dream',
+    background: 'linear-gradient(135deg, #fdf2f8 0%, #fef2f2 100%)',
+    cardBg: '#ffffff',
+    cardBorder: '#fbcfe8',
     text: '#831843',
-    subtext: '#be185d'
+    subtext: '#be185d',
+    accent: '#db2777'
   },
   emerald: {
+    name: 'Royal Emerald',
     background: 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)',
-    cardBg: 'rgba(255, 255, 255, 0.1)',
+    cardBg: 'rgba(255, 255, 255, 0.08)',
+    cardBorder: 'rgba(255, 255, 255, 0.15)',
     text: '#ecfdf5',
-    subtext: '#a7f3d0'
+    subtext: '#a7f3d0',
+    accent: '#34d399',
+    glass: true
   }
 }
 
@@ -271,8 +313,6 @@ export function displayLinks(container: HTMLElement, links: LinkType[], themeNam
     item.style.animationDelay = `${index * 0.1}s`
     
     card.href = link.url
-    card.style.background = theme.cardBg
-    card.style.color = theme.text
     
     iconWrapper.style.background = `${platform.color}15`
     iconWrapper.style.color = platform.color
@@ -280,9 +320,6 @@ export function displayLinks(container: HTMLElement, links: LinkType[], themeNam
     
     title.textContent = link.title
     urlDisplay.textContent = domain
-    urlDisplay.style.color = theme.subtext
-    
-    arrow.style.color = theme.subtext
     
     fragment.appendChild(clone)
   })
@@ -295,39 +332,28 @@ export function displayLinks(container: HTMLElement, links: LinkType[], themeNam
 // ============================================
 
 /**
- * Apply theme to the page
+ * Apply theme to the page using CSS variables
  */
 export function applyTheme(themeName: ThemeName = DEFAULT_THEME): void {
   const theme = getTheme(themeName)
   const page = document.getElementById('profile-page')
   
-  if (page) {
-    page.style.background = theme.background
-    page.style.backgroundAttachment = 'fixed'
+  if (!page) return
+  
+  // Set Semantic CSS Variables
+  const vars = {
+    '--theme-bg': theme.background,
+    '--theme-card-bg': theme.cardBg,
+    '--theme-card-border': theme.cardBorder,
+    '--theme-text': theme.text,
+    '--theme-subtext': theme.subtext,
+    '--theme-accent': theme.accent,
+    '--theme-glass': theme.glass ? 'blur(16px)' : 'none'
   }
   
-  // Apply to cards
-  document.querySelectorAll<HTMLElement>('.link-card').forEach(card => {
-    card.style.background = theme.cardBg
-    card.style.color = theme.text
+  Object.entries(vars).forEach(([key, value]) => {
+    page.style.setProperty(key, value)
   })
-  
-  // Apply to other elements
-  document.querySelectorAll<HTMLElement>('.link-url').forEach(url => {
-    url.style.color = theme.subtext
-  })
-  
-  document.querySelectorAll<HTMLElement>('.link-arrow').forEach(arrow => {
-    arrow.style.color = theme.subtext
-  })
-  
-  const title = document.getElementById('display-name')
-  const handle = document.querySelector('.username-handle') as HTMLElement
-  const bio = document.getElementById('bio')
-  
-  if (title) title.style.color = theme.text
-  if (handle) handle.style.color = theme.subtext
-  if (bio) bio.style.color = theme.subtext
 }
 
 /**

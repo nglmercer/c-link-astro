@@ -3,10 +3,17 @@ interface Props {
   username: string;
   displayName?: string;
   bio?: string;
+  avatarUrl?: string;
   theme?: string;
 }
 
-const { username, displayName = '', bio = '', theme = 'gradient' } = Astro.props;
+const { 
+  username, 
+  displayName = '', 
+  bio = '', 
+  avatarUrl = '',
+  theme = 'gradient' 
+} = Astro.props;
 import { themes } from '../lib/profile'
 ---
 
