@@ -1,0 +1,254 @@
+---
+interface Link {
+  id: string;
+  title: string;
+  url: string;
+  order: number;
+  isActive: boolean;
+}
+
+interface Props {
+  links: Link[];
+}
+
+const { links = [] } = Astro.props;
+---
+
+<div class="links-manager">
+  <div class="links-header">
+    <h3>Your Links</h3>
+    <span class="link-count">{links.length} links</span>
+  </div>
+
+  <div id="links-list" class="links-list">
+    {links.length === 0 ? (
+      <p class="empty-message">No links yet. Add your first link below!</p>
+    ) : (
+      links.map((link, index) => (
+        <div class="link-item" data-index={index} data-id={link.id}>
+          <div class="link-drag-handle" title="Drag to reorder">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+          </div>
+          <div class="link-content">
+            <span class="link-title">{link.title}</span>
+            <span class="link-url">{link.url}</span>
+          </div>
+          <button class="btn-delete" data-id={link.id} title="Delete link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </button>
+        </div>
+      ))
+    )}
+  </div>
+
+  <div class="add-link-form">
+    <h4>Add New Link</h4>
+    <div class="add-link-inputs">
+      <input 
+        type="text" 
+        id="link-title" 
+        placeholder="Link Title"
+        class="link-input"
+      />
+      <input 
+        type="url" 
+        id="link-url" 
+        placeholder="https://example.com"
+        class="link-input"
+      />
+      <button id="add-link-btn" class="btn-add">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Add
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .links-manager {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+  }
+
+  .links-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .links-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #111;
+  }
+
+  .link-count {
+    font-size: 0.85rem;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+  }
+
+  .links-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    min-height: 60px;
+  }
+
+  .empty-message {
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.95rem;
+    padding: 1.5rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px dashed #d1d5db;
+  }
+
+  .link-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s;
+  }
+
+  .link-item:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  .link-drag-handle {
+    cursor: grab;
+    color: #9ca3af;
+    padding: 0.25rem;
+  }
+
+  .link-drag-handle:active {
+    cursor: grabbing;
+  }
+
+  .link-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+
+  .link-title {
+    font-weight: 500;
+    color: #111;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .link-url {
+    font-size: 0.8rem;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .btn-delete {
+    background: transparent;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: #9ca3af;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .btn-delete:hover {
+    background: #fee2e2;
+    color: #ef4444;
+  }
+
+  .add-link-form {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 1.25rem;
+  }
+
+  .add-link-form h4 {
+    margin: 0 0 0.75rem;
+    font-size: 0.95rem;
+    color: #374151;
+  }
+
+  .add-link-inputs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .link-input {
+    flex: 1;
+    min-width: 120px;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+  }
+
+  .link-input:focus {
+    outline: none;
+    border-color: #2563eb;
+  }
+
+  .btn-add {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 0.625rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+
+  .btn-add:hover {
+    background: #1d4ed8;
+  }
+
+  @media (max-width: 480px) {
+    .add-link-inputs {
+      flex-direction: column;
+    }
+    
+    .btn-add {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>

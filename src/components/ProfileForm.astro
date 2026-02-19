@@ -1,0 +1,140 @@
+---
+interface Props {
+  username: string;
+  displayName?: string;
+  bio?: string;
+}
+
+const { username, displayName = '', bio = '' } = Astro.props;
+---
+
+<div class="profile-form">
+  <div class="form-group">
+    <label for="username">Username</label>
+    <div class="username-input-group">
+      <span class="prefix">clink.social/</span>
+      <input 
+        type="text" 
+        id="username" 
+        value={username} 
+        placeholder="choose-username"
+        minlength="3"
+        maxlength="30"
+        pattern="[a-zA-Z0-9_-]+"
+      />
+    </div>
+    <p class="hint">Choose a unique username for your link tree</p>
+    <p id="username-status" class="username-status"></p>
+  </div>
+
+  <div class="form-group">
+    <label for="displayName">Display Name</label>
+    <input 
+      type="text" 
+      id="displayName" 
+      value={displayName} 
+      placeholder="Your name"
+    />
+  </div>
+
+  <div class="form-group">
+    <label for="bio">Bio</label>
+    <textarea 
+      id="bio" 
+      placeholder="Tell people about yourself" 
+      rows="3"
+    >{bio}</textarea>
+  </div>
+</div>
+
+<style>
+  .profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .form-group label {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.95rem;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  .username-input-group {
+    display: flex;
+    align-items: center;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .username-input-group:focus-within {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  .username-input-group .prefix {
+    padding: 0.75rem;
+    background: #f3f4f6;
+    color: #6b7280;
+    font-size: 0.9rem;
+    border-right: 1px solid #d1d5db;
+  }
+
+  .username-input-group input {
+    border: none;
+    border-radius: 0;
+    flex: 1;
+  }
+
+  .username-input-group input:focus {
+    box-shadow: none;
+  }
+
+  .hint {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 0;
+  }
+
+  .username-status {
+    font-size: 0.85rem;
+    margin: 0;
+    min-height: 1.2em;
+  }
+
+  .username-status.available {
+    color: #10b981;
+  }
+
+  .username-status.taken {
+    color: #ef4444;
+  }
+
+  .username-status.checking {
+    color: #6b7280;
+  }
+</style>

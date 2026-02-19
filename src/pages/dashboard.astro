@@ -2,6 +2,8 @@
 import Layout from '../layouts/Layout.astro'
 import { SignedIn, SignedOut, SignInButton } from '@clerk/astro/components'
 import { clerkClient } from '@clerk/astro/server'
+import ProfileForm from '../components/ProfileForm.astro'
+import LinkEditor from '../components/LinkEditor.astro'
 import type { UserProfile } from '../types/linktree'
 
 // Get user ID from Clerk auth via locals
@@ -27,336 +29,245 @@ if (userId) {
 
 // Pre-load links from profile for SSR
 const initialLinks = profile?.links || []
+const hasClaimedUsername = !!profile?.username
 ---
 
-<Layout title="Dashboard - Link Tree">
+<Layout title="Dashboard - C-Link">
   <SignedOut>
     <div class="auth-prompt">
-      <h2>Sign in to access your dashboard</h2>
-      <SignInButton mode="modal">
-        <button class="btn-primary">Sign In</button>
-      </SignInButton>
+      <div class="auth-card">
+        <div class="auth-icon">🔗</div>
+        <h2>Welcome to C-Link</h2>
+        <p>Create your personal link tree and share all your links in one place.</p>
+        <SignInButton mode="modal">
+          <button class="btn-primary">Sign In to Get Started</button>
+        </SignInButton>
+      </div>
     </div>
   </SignedOut>
 
   <SignedIn>
     <div class="dashboard">
       <div class="dashboard-header">
-        <h1>Link Tree Dashboard</h1>
-        <p>Manage your links and customize your profile</p>
+        <div class="header-content">
+          <h1>Dashboard</h1>
+          <p>Manage your profile and links</p>
+        </div>
+        <div class="header-actions">
+          <a href={`/${username}`} target="_blank" class="btn-view">
+            View Profile →
+          </a>
+        </div>
       </div>
 
-      <div class="profile-section">
-        <h2>Profile Settings</h2>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" value={username} placeholder="Enter your username" />
-            <p class="hint">Your link tree will be available at: <code id="preview-url">/{username}</code></p>
-          </div>
-          <div class="form-group">
-            <label for="displayName">Display Name</label>
-            <input type="text" id="displayName" value={profile?.displayName || username} placeholder="Your display name" />
+      {!hasClaimedUsername && (
+        <div class="claim-banner">
+          <div class="claim-content">
+            <h3>🎉 Claim your username!</h3>
+            <p>Set up your unique link tree URL now.</p>
           </div>
         </div>
-        <div class="form-group">
-          <label for="bio">Bio</label>
-          <textarea id="bio" placeholder="Tell people about yourself" rows="3">{profile?.bio || ''}</textarea>
+      )}
+
+      <div class="dashboard-grid">
+        <div class="section profile-section">
+          <h2>Profile</h2>
+          <ProfileForm 
+            username={username}
+            displayName={profile?.displayName}
+            bio={profile?.bio}
+          />
         </div>
-        <button id="save-profile-btn" class="btn-secondary">Save Profile</button>
+
+        <div class="section links-section">
+          <LinkEditor links={initialLinks} />
+        </div>
+      </div>
+
+      <div class="save-bar">
+        <button id="save-btn" class="btn-save">
+          <span class="btn-text">Save Changes</span>
+          <span class="btn-loading">Saving...</span>
+        </button>
         <span id="save-status" class="save-status"></span>
-      </div>
-
-      <div class="links-section">
-        <h2>Your Links</h2>
-        <div id="links-list" class="links-list" data-user-id={userId}>
-        </div>
-        
-        <div class="add-link-form">
-          <h3>Add New Link</h3>
-          <div class="form-row">
-            <input type="text" id="link-title" placeholder="Link Title" />
-            <input type="url" id="link-url" placeholder="https://example.com" />
-            <button id="add-link-btn" class="btn-primary">Add Link</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="preview-section">
-        <h2>Preview</h2>
-        <a href={`/${username}`} target="_blank" class="preview-link">
-          View your public page →
-        </a>
       </div>
     </div>
   </SignedIn>
 </Layout>
 
-<script define:vars={{ initialLinks, username }}>
-  // Client-side state management synced with Clerk
-  let links = initialLinks || []
-  let currentUsername = username
-  let currentDisplayName = username
-  let currentBio = ''
+<script define:vars={{ hasClaimedUsername }}>
+  let currentUsername = hasClaimedUsername ? '' : null
+  
+  // Username availability check
+  let isCheckingUsername = false
+  let checkTimeout = null
 
-  // Load from initial data
-  if (initialLinks && initialLinks.length > 0) {
-    links = initialLinks
+  const usernameInput = document.getElementById('username')
+  const usernameStatus = document.getElementById('username-status')
+  const saveBtn = document.getElementById('save-btn')
+  const saveStatus = document.getElementById('save-status')
+
+  // Check username
+  async function checkUsername(username) {
+    if (!username || username.length < 3) return
+    
+    if (checkTimeout) clearTimeout(checkTimeout)
+    
+    checkTimeout = setTimeout(async () => {
+      if (isCheckingUsername) return
+      
+      isCheckingUsername = true
+      if (usernameStatus) {
+        usernameStatus.textContent = 'Checking...'
+        usernameStatus.className = 'username-status checking'
+      }
+      
+      try {
+        const response = await fetch(`/api/profile/check?username=${encodeURIComponent(username)}`)
+        const data = await response.json()
+        
+        if (data.available) {
+          if (usernameStatus) {
+            usernameStatus.textContent = '✓ Username is available!'
+            usernameStatus.className = 'username-status available'
+          }
+        } else {
+          if (usernameStatus) {
+            usernameStatus.textContent = '✗ ' + (data.reason || 'Username is taken')
+            usernameStatus.className = 'username-status taken'
+          }
+        }
+      } catch (error) {
+        console.error('Error checking username:', error)
+      } finally {
+        isCheckingUsername = false
+      }
+    }, 500)
   }
 
-  // Save profile to Clerk
+  // Username input handler
+  if (usernameInput) {
+    usernameInput.addEventListener('input', (e) => {
+      const value = e.target.value.trim()
+      if (value.length >= 3) {
+        checkUsername(value)
+      } else if (usernameStatus) {
+        usernameStatus.textContent = ''
+        usernameStatus.className = 'username-status'
+      }
+    })
+  }
+
+  // Save to Clerk
   async function saveToClerk() {
-    const statusEl = document.getElementById('save-status')
-    const saveBtn = document.getElementById('save-profile-btn')
-    
     try {
       if (saveBtn) saveBtn.disabled = true
-      if (statusEl) statusEl.textContent = 'Saving...'
+      if (saveStatus) {
+        saveStatus.textContent = 'Saving...'
+        saveStatus.className = 'save-status saving'
+      }
       
-      const usernameInput = document.getElementById('username') as HTMLInputElement
-      const displayNameInput = document.getElementById('displayName') as HTMLInputElement
-      const bioInput = document.getElementById('bio') as HTMLTextAreaElement
+      const usernameVal = usernameInput?.value?.trim() || ''
+      const displayNameInput = document.getElementById('displayName')
+      const bioInput = document.getElementById('bio')
       
       const response = await fetch('/api/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: usernameInput?.value || currentUsername,
-          displayName: displayNameInput?.value || currentDisplayName,
-          bio: bioInput?.value || currentBio,
-          links: links
+          username: usernameVal,
+          displayName: displayNameInput?.value?.trim() || '',
+          bio: bioInput?.value?.trim() || ''
         })
       })
       
       const data = await response.json()
       
       if (data.success) {
-        if (statusEl) {
-          statusEl.textContent = 'Saved!'
-          statusEl.className = 'save-status success'
-        }
         currentUsername = data.profile.username
-        currentDisplayName = data.profile.displayName
-        currentBio = data.profile.bio
         
-        // Update preview URL
-        const previewUrl = document.getElementById('preview-url')
-        if (previewUrl) {
-          previewUrl.textContent = `/${currentUsername}`
+        if (saveStatus) {
+          saveStatus.textContent = 'Saved!'
+          saveStatus.className = 'save-status success'
+        }
+        
+        // Update preview link
+        const previewLink = document.querySelector('.btn-view')
+        if (previewLink && currentUsername) {
+          previewLink.setAttribute('href', `/${currentUsername}`)
+        }
+        
+        // Hide claim banner
+        const banner = document.querySelector('.claim-banner')
+        if (banner && currentUsername) {
+          banner.style.display = 'none'
         }
       } else {
         throw new Error(data.error || 'Failed to save')
       }
     } catch (error) {
       console.error('Error saving:', error)
-      if (statusEl) {
-        statusEl.textContent = 'Error saving'
-        statusEl.className = 'save-status error'
+      if (saveStatus) {
+        saveStatus.textContent = 'Error saving'
+        saveStatus.className = 'save-status error'
       }
     } finally {
       if (saveBtn) saveBtn.disabled = false
       setTimeout(() => {
-        if (statusEl) {
-          statusEl.textContent = ''
-          statusEl.className = 'save-status'
+        if (saveStatus) {
+          saveStatus.textContent = ''
+          saveStatus.className = 'save-status'
         }
-      }, 2000)
+      }, 3000)
     }
   }
 
-  // Render links list
-  function renderLinks() {
-    const container = document.getElementById('links-list')
-    if (!container) return
-
-    if (links.length === 0) {
-      container.innerHTML = '<p class="empty">No links yet. Add your first link above!</p>'
-      return
-    }
-
-    container.innerHTML = links.map((link, index) => `
-      <div class="link-item">
-        <div class="link-info">
-          <strong>${escapeHtml(link.title)}</strong>
-          <span class="link-url">${escapeHtml(link.url)}</span>
-        </div>
-        <button class="btn-delete" data-index="${index}">Delete</button>
-      </div>
-    `).join('')
-
-    // Add event listeners to delete buttons
-    container.querySelectorAll('.btn-delete').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const index = parseInt((e.target as HTMLElement).getAttribute('data-index') || '0')
-        deleteLink(index)
-      })
-    })
-  }
-
-  // Escape HTML to prevent XSS
-  function escapeHtml(text) {
-    const div = document.createElement('div')
-    div.textContent = text
-    return div.innerHTML
-  }
-
-  // Add new link
-  document.getElementById('add-link-btn')?.addEventListener('click', () => {
-    const titleInput = document.getElementById('link-title') as HTMLInputElement
-    const urlInput = document.getElementById('link-url') as HTMLInputElement
-    
-    const title = titleInput?.value.trim()
-    const url = urlInput?.value.trim()
-
-    if (!title || !url) {
-      alert('Please fill in both title and URL')
-      return
-    }
-
-    // Add to links array
-    links.push({ 
-      id: Date.now().toString(),
-      title, 
-      url, 
-      order: links.length,
-      isActive: true 
-    })
-    
-    titleInput.value = ''
-    urlInput.value = ''
-    renderLinks()
-    
-    // Save to Clerk
-    saveToClerk()
-  })
-
-  // Delete link
-  function deleteLink(index) {
-    links.splice(index, 1)
-    // Reorder
-    links.forEach((link, i) => link.order = i)
-    renderLinks()
-    
-    // Save to Clerk
-    saveToClerk()
-  }
-
-  // Save profile button
-  document.getElementById('save-profile-btn')?.addEventListener('click', saveToClerk)
-
-  // Update username preview
-  document.getElementById('username')?.addEventListener('input', (e) => {
-    const target = e.target as HTMLInputElement
-    const preview = document.getElementById('preview-url')
-    if (preview) {
-      preview.textContent = `/${target.value || 'username'}`
-    }
-  })
-
-  // Initial render
-  renderLinks()
+  // Save button
+  document.getElementById('save-btn')?.addEventListener('click', saveToClerk)
 </script>
 
 <style>
   .auth-prompt {
+    min-height: 80vh;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 60vh;
-    gap: 1.5rem;
-    text-align: center;
-  }
-
-  .dashboard {
-    max-width: 800px;
-    margin: 0 auto;
     padding: 2rem;
   }
 
-  .dashboard-header {
+  .auth-card {
     text-align: center;
-    margin-bottom: 2rem;
+    max-width: 400px;
+    padding: 3rem 2rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   }
 
-  .dashboard-header h1 {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .dashboard-header p {
-    color: #666;
-  }
-
-  .profile-section, .links-section, .preview-section {
-    background: #f9f9f9;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .profile-section h2, .links-section h2, .preview-section h2 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-    font-size: 1.25rem;
-  }
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    flex: 1;
-  }
-
-  .form-group label {
-    font-weight: 600;
-  }
-
-  .form-group input, .form-group textarea {
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-family: inherit;
-    resize: vertical;
-  }
-
-  .hint {
-    font-size: 0.875rem;
-    color: #666;
-  }
-
-  .hint code {
-    background: #e9e9e9;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-  }
-
-  .form-row {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
+  .auth-icon {
+    font-size: 3rem;
     margin-bottom: 1rem;
   }
 
-  .form-row input {
-    flex: 1;
-    min-width: 150px;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 1rem;
+  .auth-card h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.75rem;
+  }
+
+  .auth-card p {
+    color: #6b7280;
+    margin: 0 0 1.5rem;
   }
 
   .btn-primary {
     background: #2563eb;
     color: white;
     border: none;
-    padding: 0.75rem 1.5rem;
+    padding: 0.875rem 2rem;
     border-radius: 8px;
     cursor: pointer;
     font-size: 1rem;
-    font-weight: 500;
+    font-weight: 600;
     transition: background 0.2s;
   }
 
@@ -364,31 +275,136 @@ const initialLinks = profile?.links || []
     background: #1d4ed8;
   }
 
-  .btn-secondary {
+  .dashboard {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+  }
+
+  .header-content h1 {
+    margin: 0 0 0.25rem;
+    font-size: 1.75rem;
+  }
+
+  .header-content p {
+    margin: 0;
+    color: #6b7280;
+  }
+
+  .btn-view {
+    background: white;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .btn-view:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+  }
+
+  .claim-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+  }
+
+  .claim-content h3 {
+    margin: 0 0 0.25rem;
+    font-size: 1.1rem;
+  }
+
+  .claim-content p {
+    margin: 0;
+    opacity: 0.9;
+  }
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .dashboard-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .section {
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .section h2 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    color: #111;
+  }
+
+  .save-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 12px;
+    position: sticky;
+    bottom: 1rem;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .btn-save {
     background: #10b981;
     color: white;
     border: none;
-    padding: 0.75rem 1.5rem;
+    padding: 0.75rem 2rem;
     border-radius: 8px;
     cursor: pointer;
     font-size: 1rem;
-    font-weight: 500;
+    font-weight: 600;
     transition: background 0.2s;
   }
 
-  .btn-secondary:hover {
+  .btn-save:hover {
     background: #059669;
   }
 
-  .btn-secondary:disabled {
+  .btn-save:disabled {
     background: #9ca3af;
     cursor: not-allowed;
   }
 
+  .btn-text, .btn-loading {
+    display: none;
+  }
+
+  .btn-save:not(:disabled) .btn-text {
+    display: inline;
+  }
+
+  .btn-save:disabled .btn-loading {
+    display: inline;
+  }
+
   .save-status {
-    margin-left: 1rem;
-    font-size: 0.875rem;
-    transition: all 0.2s;
+    font-size: 0.9rem;
   }
 
   .save-status.success {
@@ -399,94 +415,7 @@ const initialLinks = profile?.links || []
     color: #ef4444;
   }
 
-  .links-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .link-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: white;
-    padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid #eee;
-  }
-
-  .link-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .link-url {
-    font-size: 0.875rem;
-    color: #666;
-  }
-
-  .btn-delete {
-    background: #ef4444;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.875rem;
-    transition: background 0.2s;
-  }
-
-  .btn-delete:hover {
-    background: #dc2626;
-  }
-
-  .add-link-form h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-    font-size: 1rem;
-  }
-
-  .empty {
-    color: #666;
-    font-style: italic;
-    text-align: center;
-    padding: 2rem;
-  }
-
-  .preview-link {
-    display: inline-block;
-    background: #10b981;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: background 0.2s;
-  }
-
-  .preview-link:hover {
-    background: #059669;
-  }
-
-  @media (max-width: 600px) {
-    .dashboard {
-      padding: 1rem;
-    }
-
-    .form-row {
-      flex-direction: column;
-    }
-
-    .link-item {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.75rem;
-    }
-
-    .btn-delete {
-      width: 100%;
-    }
+  .save-status.saving {
+    color: #6b7280;
   }
 </style>

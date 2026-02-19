@@ -69,15 +69,15 @@ export const GET: APIRoute = async (context) => {
   try {
     const clerk = clerkClient(context)
     
-    // Search for user by username in public metadata
-    // Note: Clerk doesn't have a direct query by public metadata, so we'll need 
-    // to use a different approach - we could store a mapping or use clerkClient
+    // Get users list - Clerk returns { data: [...], totalCount: n }
+    const usersResponse = await clerk.users.getUserList({ limit: 100 })
     
-    // For now, we'll try to get users and find matching username
-    // In production, you'd want to store a username index in your own DB
-    const users = await clerk.users.getUserList({ limit: 100 })
+    // Handle both array and object response formats
+    const usersArray = Array.isArray(usersResponse) 
+      ? usersResponse 
+      : (usersResponse.data || [])
     
-    const userWithUsername = users.find(user => {
+    const userWithUsername = usersArray.find((user: any) => {
       const metadata = user.publicMetadata as Record<string, any>
       return metadata?.profile?.username === username
     })

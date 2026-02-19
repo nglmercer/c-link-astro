@@ -8,60 +8,90 @@ const reservedRoutes = ['dashboard', 'signin', 'api', 'assets', 'favicon', 'inde
 if (!username || reservedRoutes.includes(username)) {
   return Astro.redirect('/')
 }
-
-// Default profile for SSR (data will be loaded client-side)
-const displayProfile = {
-  username: username,
-  displayName: username.charAt(0).toUpperCase() + username.slice(1),
-  bio: 'Check out my links below!',
-  avatarUrl: undefined,
-  theme: 'gradient',
-  links: []
-}
 ---
 
-<Layout title={`${displayProfile.displayName} - Link Tree`}>
+<Layout title={`@${username} - C-Link`}>
   <div class="profile-page">
     <div class="profile-header">
       <div class="avatar-placeholder">
-        {displayProfile.displayName.charAt(0).toUpperCase()}
+        {username.charAt(0).toUpperCase()}
       </div>
-      <h1 class="display-name" id="display-name">{displayProfile.displayName}</h1>
-      <p class="username">@{username}</p>
+      <h1 class="display-name" id="display-name">@{username}</h1>
       <p class="bio" id="bio"></p>
     </div>
 
     <div class="links-container">
-      <div id="loading-links" class="loading">Loading links...</div>
+      <div id="loading-links" class="loading">
+        <span class="material-symbols-outlined loading-icon">sync</span>
+        <p>Loading...</p>
+      </div>
       <ul class="links-list" id="links-list-container" style="display: none;">
       </ul>
-      <div class="empty-links" id="empty-links" style="display: none;">
-        <p>No links yet!</p>
-        <p class="hint">This user hasn't added any links.</p>
+      <div class="not-found" id="not-found" style="display: none;">
+        <span class="material-symbols-outlined not-found-icon">link_off</span>
+        <h2>This page doesn't exist</h2>
+        <p>The user <strong>@{username}</strong> hasn't claimed their link tree yet.</p>
+        <a href="/dashboard" class="cta-button">
+          <span class="material-symbols-outlined">add</span>
+          Claim your own link tree
+        </a>
       </div>
     </div>
 
     <footer class="footer">
-      <a href="/dashboard" class="footer-link">Create your own link tree</a>
+      <a href="/" class="footer-logo">
+        <span class="material-symbols-outlined">link</span>
+        C-Link
+      </a>
     </footer>
   </div>
-</Layout>
+</ Layout>
 
 <script define:vars={{ username }}>
-  // Fetch profile from Clerk API
+  // Get platform icon name
+  function getPlatformIconName(url) {
+    try {
+      const urlObj = new URL(url);
+      const domain = urlObj.hostname.replace('www.', '').toLowerCase();
+      
+      if (domain.includes('github')) return 'code';
+      if (domain.includes('twitter') || domain.includes('x.com')) return 'tag';
+      if (domain.includes('instagram')) return 'photo_camera';
+      if (domain.includes('youtube')) return 'play_circle';
+      if (domain.includes('linkedin')) return 'work';
+      if (domain.includes('tiktok')) return 'music_note';
+      if (domain.includes('discord')) return 'chat';
+      if (domain.includes('twitch')) return 'sports_esports';
+      if (domain.includes('reddit')) return 'forum';
+      if (domain.includes('medium')) return 'article';
+      return 'link';
+    } catch {
+      return 'link';
+    }
+  }
+
+  // Get domain
+  function getDomain(url) {
+    try {
+      return new URL(url).hostname.replace('www.', '');
+    } catch {
+      return url;
+    }
+  }
+
   async function loadProfile() {
     try {
       const response = await fetch(`/api/profile/${username}`)
       
       if (!response.ok) {
-        showEmpty()
+        showNotFound()
         return
       }
       
       const data = await response.json()
       
       if (!data.profile) {
-        showEmpty()
+        showNotFound()
         return
       }
       
@@ -84,6 +114,8 @@ const displayProfile = {
       if (avatarPlaceholder) {
         if (profile.displayName) {
           avatarPlaceholder.textContent = profile.displayName.charAt(0).toUpperCase()
+        } else {
+          avatarPlaceholder.textContent = username.charAt(0).toUpperCase()
         }
       }
       
@@ -99,35 +131,50 @@ const displayProfile = {
       
     } catch (error) {
       console.error('Error loading profile:', error)
-      showEmpty()
+      showNotFound()
     }
   }
 
-  function showEmpty() {
+  function showNotFound() {
     document.getElementById('loading-links').style.display = 'none'
-    document.getElementById('empty-links').style.display = 'block'
+    document.getElementById('not-found').style.display = 'block'
+  }
+
+  function showEmpty() {
+    const loadingEl = document.getElementById('loading-links')
+    const container = document.getElementById('links-list-container')
+    
+    if (loadingEl) loadingEl.style.display = 'none'
+    if (container) {
+      container.style.display = 'flex'
+      container.innerHTML = `
+        <li class="empty-link-item">
+          <span class="material-symbols-outlined">link_off</span>
+          <span>No links yet</span>
+        </li>
+      `
+    }
   }
 
   function renderLinks(links) {
     const container = document.getElementById('links-list-container')
     const loadingEl = document.getElementById('loading-links')
-    const emptyEl = document.getElementById('empty-links')
+    const notFoundEl = document.getElementById('not-found')
     
     if (!container) return
     
-    loadingEl.style.display = 'none'
-    emptyEl.style.display = 'none'
+    if (loadingEl) loadingEl.style.display = 'none'
+    if (notFoundEl) notFoundEl.style.display = 'none'
     container.style.display = 'flex'
     
     container.innerHTML = links.map((link, index) => `
       <li class="link-item" style="animation-delay: ${index * 0.1}s">
         <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="link-button">
+          <span class="link-icon">
+            <span class="material-symbols-outlined">${getPlatformIconName(link.url)}</span>
+          </span>
           <span class="link-title">${escapeHtml(link.title)}</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="external-icon">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-            <polyline points="15 3 21 3 21 9"></polyline>
-            <line x1="10" y1="14" x2="21" y2="3"></line>
-          </svg>
+          <span class="material-symbols-outlined external-icon">open_in_new</span>
         </a>
       </li>
     `).join('')
@@ -139,7 +186,6 @@ const displayProfile = {
     return div.innerHTML
   }
 
-  // Load profile on page load
   loadProfile()
 </script>
 
@@ -207,6 +253,57 @@ const displayProfile = {
     color: #666;
   }
 
+  .loading-icon {
+    font-size: 2rem;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .not-found {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: white;
+    border-radius: 16px;
+    border: 1px dashed #d1d5db;
+  }
+
+  .not-found-icon {
+    font-size: 3rem;
+    color: #9ca3af;
+    margin-bottom: 1rem;
+  }
+
+  .not-found h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.25rem;
+    color: #111;
+  }
+
+  .not-found p {
+    color: #666;
+    margin: 0 0 1.5rem;
+  }
+
+  .cta-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #2563eb;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+
+  .cta-button:hover {
+    background: #1d4ed8;
+  }
+
   .links-list {
     list-style: none;
     padding: 0;
@@ -232,7 +329,6 @@ const displayProfile = {
   .link-button {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     width: 100%;
     padding: 1rem 1.25rem;
     background: white;
@@ -255,36 +351,52 @@ const displayProfile = {
     transform: translateY(0);
   }
 
+  .link-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    border-radius: 10px;
+    margin-right: 0.875rem;
+    color: #374151;
+  }
+
+  .link-icon .material-symbols-outlined {
+    font-size: 20px;
+  }
+
   .link-title {
+    flex: 1;
     font-size: 1rem;
   }
 
   .external-icon {
-    opacity: 0.5;
-    transition: opacity 0.2s;
+    color: #9ca3af;
+    font-size: 18px;
   }
 
   .link-button:hover .external-icon {
-    opacity: 1;
+    color: #6b7280;
   }
 
-  .empty-links {
+  .empty-link-item {
     text-align: center;
-    padding: 3rem 1rem;
+    padding: 2rem;
     background: white;
     border-radius: 12px;
     border: 1px dashed #d1d5db;
-  }
-
-  .empty-links p {
-    margin: 0;
     color: #666;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
   }
 
-  .empty-links .hint {
-    font-size: 0.875rem;
-    color: #999;
-    margin-top: 0.5rem;
+  .empty-link-item .material-symbols-outlined {
+    font-size: 2rem;
+    color: #9ca3af;
   }
 
   .footer {
@@ -292,14 +404,16 @@ const displayProfile = {
     padding-top: 2rem;
   }
 
-  .footer-link {
-    color: #666;
+  .footer-logo {
+    color: #6b7280;
     text-decoration: none;
-    font-size: 0.875rem;
-    transition: color 0.2s;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
   }
 
-  .footer-link:hover {
+  .footer-logo:hover {
     color: #111;
   }
 
