@@ -124,10 +124,16 @@ export const themes: ThemeConfig = {
 export const DEFAULT_THEME: ThemeName = 'gradient'
 
 /**
- * Get theme by name
+ * Get theme by name or custom JSON
  */
-export function getTheme(themeName: ThemeName = DEFAULT_THEME): Theme {
-  return themes[themeName] || themes[DEFAULT_THEME]
+export function getTheme(themeName: ThemeName | string = DEFAULT_THEME): Theme {
+  if (themeName && themeName.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(themeName)
+      if (parsed.custom) return parsed as Theme
+    } catch(e) { /* fallback */ }
+  }
+  return themes[themeName as string] || themes[DEFAULT_THEME]
 }
 
 /**

@@ -54,8 +54,11 @@
 }
 
 .preview-screen {
-  width: 320px;
-  height: 640px;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 9/19.5;
+  height: auto;
+  min-height: 500px;
   background: #000;
   border-radius: 48px;
   border: 12px solid #1a1a1a;

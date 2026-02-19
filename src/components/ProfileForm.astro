@@ -58,40 +58,201 @@ import { themes } from '../lib/profile'
 
   <div class="form-field">
     <label>Background Theme</label>
-    <div class="theme-grid" id="theme-selector">
-      {Object.entries(themes).map(([name, config]) => (
-        <button 
-          type="button" 
-          class={`theme-option ${theme === name ? 'active' : ''}`}
-          data-theme={name}
-          title={config.name}
-        >
-          <div class="theme-preview" style={`background: ${config.background}`}></div>
-          <span class="theme-name">{config.name}</span>
-        </button>
-      ))}
+    
+    <!-- Single Button to Open Theme Modal -->
+    <button 
+      type="button" 
+      class="btn-profile-link theme-trigger-btn"
+      id="open-theme-modal"
+    >
+      <span class="material-symbols-outlined">palette</span>
+      <span id="current-theme-label">Change Theme</span>
+    </button>
+  </div>
+</div>
+
+<!-- Unified Theme Modal -->
+<div id="unified-theme-modal" class="custom-modal-overlay hide">
+  <div class="custom-modal theme-modal-large">
+    <div class="custom-modal-header">
+      <h3>Choose a Theme</h3>
+      <button id="close-theme-modal" class="icon-btn">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="custom-modal-body">
+      
+      <!-- Predefined Themes -->
+      <div class="theme-section">
+        <h4>Presets</h4>
+        <div class="theme-grid" id="theme-selector">
+          {Object.entries(themes).map(([name, config]) => (
+            <button 
+              type="button" 
+              class={`theme-option ${theme === name ? 'active' : ''}`}
+              data-theme={name}
+              title={config.name}
+            >
+              <div class="theme-preview" style={`background: ${config.background}`}></div>
+              <span class="theme-name">{config.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="modal-divider"></div>
+
+      <!-- Custom Builder -->
+      <div class="theme-section">
+        <div class="section-header">
+          <h4>Custom Theme</h4>
+          <button 
+            type="button" 
+            class={`theme-option custom-builder-toggle ${theme?.startsWith('{') ? 'active' : ''}`}
+            id="btn-custom-theme"
+          >
+            <div class="theme-preview custom-preview-bg">
+              <span class="material-symbols-outlined">tune</span>
+            </div>
+            <span class="theme-name">Design Details</span>
+          </button>
+        </div>
+
+        <div id="custom-theme-controls" class="custom-controls-area hide">
+          <div class="color-picker-group">
+            <label>Background Color</label>
+            <div class="color-control">
+              <input type="color" id="color-bg" value="#0f172a" />
+              <span class="color-val">#0f172a</span>
+            </div>
+          </div>
+          <div class="color-picker-group">
+            <label>Card Color / Glass</label>
+            <div class="color-control">
+              <input type="color" id="color-card" value="#1e293b" />
+              <span class="color-val">#1e293b</span>
+            </div>
+          </div>
+          <div class="color-picker-group">
+            <label>Text Color</label>
+            <div class="color-control">
+              <input type="color" id="color-text" value="#f8fafc" />
+              <span class="color-val">#f8fafc</span>
+            </div>
+          </div>
+          <div class="color-picker-group">
+            <label>Accent Color (Buttons/Links)</label>
+            <div class="color-control">
+              <input type="color" id="color-accent" value="#3b82f6" />
+              <span class="color-val">#3b82f6</span>
+            </div>
+          </div>
+          <div class="custom-btn-row">
+            <button id="apply-custom-theme" class="btn-primary">Apply Custom Settings</button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
 
-
-
 <script>
-  // dont apply lang="ts" to this script|| astro default script is ts 
-  // Handle theme selection
+  // Elements
+  const openModalBtn = document.getElementById('open-theme-modal');
+  const unifiedModal = document.getElementById('unified-theme-modal');
+  const closeUnifiedModal = document.getElementById('close-theme-modal');
   const themeSelector = document.getElementById('theme-selector');
-  const themeOptions = themeSelector?.querySelectorAll('.theme-option');
+  const themeOptions = themeSelector?.querySelectorAll('.theme-option[data-theme]');
+  const customBtn = document.getElementById('btn-custom-theme');
+  const customControls = document.getElementById('custom-theme-controls');
+  const applyCustom = document.getElementById('apply-custom-theme');
+  const currentThemeLabel = document.getElementById('current-theme-label');
 
+  // Input bindings
+  const inBg = document.getElementById('color-bg') as HTMLInputElement;
+  const inCard = document.getElementById('color-card') as HTMLInputElement;
+  const inText = document.getElementById('color-text') as HTMLInputElement;
+  const inAccent = document.getElementById('color-accent') as HTMLInputElement;
+
+  function setOrUpdateActive(clicked: HTMLElement) {
+    themeOptions?.forEach(opt => opt.classList.remove('active'));
+    customBtn?.classList.remove('active');
+    clicked.classList.add('active');
+  }
+
+  // Predefined themes
   themeOptions?.forEach(option => {
     option.addEventListener('click', () => {
-      // Remove active class from all
-      themeOptions.forEach(opt => opt.classList.remove('active'));
-      // Add to current
-      option.classList.add('active');
+      setOrUpdateActive(option as HTMLElement);
+      const themeValue = (option as HTMLElement).dataset.theme;
+      const themeName = (option as HTMLElement).querySelector('.theme-name')?.textContent || 'Preset';
       
-      // Dispatch custom event to notify parent components
-      const theme = (option as HTMLElement).dataset.theme;
-      document.dispatchEvent(new CustomEvent('theme-updated', { detail: theme }));
+      document.dispatchEvent(new CustomEvent('theme-updated', { detail: themeValue }));
+      
+      // Update global context value
+      (window as any).currentTheme = themeValue;
+      
+      // Update button label
+      if (currentThemeLabel) currentThemeLabel.textContent = themeName;
+      
+      unifiedModal?.classList.add('hide');
     });
+  });
+
+  // Modal toggle logic
+  openModalBtn?.addEventListener('click', () => {
+    unifiedModal?.classList.remove('hide');
+  });
+
+  closeUnifiedModal?.addEventListener('click', () => {
+    unifiedModal?.classList.add('hide');
+  });
+
+  // Custom toggler
+  customBtn?.addEventListener('click', () => {
+    customControls?.classList.toggle('hide');
+  });
+
+  // Color inputs text update sync
+  document.querySelectorAll('.custom-controls-area input[type="color"]').forEach(input => {
+    input.addEventListener('input', (e) => {
+      const target = e.target as HTMLInputElement;
+      const valDisplay = target.nextElementSibling;
+      if (valDisplay) valDisplay.textContent = target.value;
+    });
+  });
+
+  // Apply custom logic
+  applyCustom?.addEventListener('click', () => {
+    const customConfig = {
+      custom: true,
+      name: 'Custom',
+      background: inBg.value,
+      cardBg: inCard.value + 'cc', // Slight transparency trick
+      cardBorder: inCard.value,
+      text: inText.value,
+      subtext: inText.value + 'b3', // 70% opacity
+      accent: inAccent.value,
+      glass: true
+    };
+    
+    const themeString = JSON.stringify(customConfig);
+    
+    setOrUpdateActive(customBtn!);
+    document.dispatchEvent(new CustomEvent('theme-updated', { detail: themeString }));
+    (window as any).currentTheme = themeString;
+    
+    if (currentThemeLabel) currentThemeLabel.textContent = 'Custom Theme';
+    
+    // Set custom preview button background
+    const customPreview = document.querySelector('.custom-preview-bg') as HTMLElement;
+    if (customPreview) {
+      customPreview.style.background = inBg.value;
+      customPreview.style.color = inText.value;
+    }
+    
+    unifiedModal?.classList.add('hide');
   });
 </script>

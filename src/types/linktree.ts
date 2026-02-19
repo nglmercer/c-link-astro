@@ -24,6 +24,7 @@ export type ThemeName =
   | 'cyberpunk' 
   | 'marshmallow' 
   | 'emerald'
+  | (string & {})
 
 export interface UserProfile {
   id: string

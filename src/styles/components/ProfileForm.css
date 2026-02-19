@@ -36,6 +36,8 @@
   color: var(--text-primary);
   font-weight: 500;
   width: 100%;
+  min-width: 0;
+  flex-grow: 1;
 }
 
 .username-input-group input:focus {
@@ -143,5 +145,200 @@
 .form-textarea {
   min-height: 120px;
   resize: vertical;
+}
+
+/* Custom Theme Modal Styles */
+.custom-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.3s ease;
+}
+
+.custom-modal-overlay.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.custom-modal {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 24px;
+  width: 90%;
+  max-width: 480px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.custom-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.custom-modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.custom-modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.color-picker-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.color-control {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255,255,255,0.03);
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-primary);
+}
+
+.color-control input[type="color"] {
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0;
+  background: transparent;
+}
+
+.color-control input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-control input[type="color"]::-webkit-color-swatch {
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+}
+
+.color-val {
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  flex: 1;
+}
+
+.custom-modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-primary);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.custom-preview-bg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top left, var(--bg-tertiary), var(--bg-secondary));
+  transition: background 0.3s ease;
+}
+
+.custom-preview-bg .material-symbols-outlined {
+  font-size: 2rem;
+  opacity: 0.6;
+}
+
+/* Unified Theme Modal Styles */
+.theme-trigger-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 1rem;
+  font-size: 1rem;
+  background: var(--bg-secondary);
+}
+
+.theme-modal-large {
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.theme-modal-large .custom-modal-body {
+  overflow-y: auto;
+  padding-bottom: 2rem;
+}
+
+.theme-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.theme-section h4 {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  font-weight: 700;
+  margin: 0;
+}
+
+.modal-divider {
+  height: 1px;
+  background: var(--border-primary);
+  margin: 0.5rem 0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.custom-builder-toggle {
+  flex-direction: row;
+  padding: 0.5rem 1rem;
+  width: auto;
+}
+
+.custom-builder-toggle .theme-preview {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.custom-controls-area {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background: rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px dashed var(--border-primary);
+  margin-top: 0.5rem;
+  animation: fadeInDown 0.3s ease;
+}
+
+.custom-controls-area.hide {
+  display: none;
+}
+
+.custom-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
 }
 
