@@ -14,33 +14,7 @@ interface Props {
 
 const { links = [] } = Astro.props;
 
-// Helper functions for the template
-function getPlatformIcon(url: string): string {
-  const domain = url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].toLowerCase();
-  
-  if (domain.includes('github')) return 'code';
-  if (domain.includes('twitter') || domain.includes('x.com')) return 'tag';
-  if (domain.includes('instagram')) return 'photo_camera';
-  if (domain.includes('youtube')) return 'play_circle';
-  if (domain.includes('linkedin')) return 'work';
-  if (domain.includes('tiktok')) return 'music_note';
-  if (domain.includes('discord')) return 'chat';
-  if (domain.includes('twitch')) return 'sports_esports';
-  if (domain.includes('reddit')) return 'forum';
-  if (domain.includes('medium')) return 'article';
-  if (domain.includes('spotify')) return 'music_note';
-  if (domain.includes('email')) return 'email';
-  if (domain.includes('figma')) return 'design_services';
-  return 'link';
-}
-
-function getDomain(url: string): string {
-  try {
-    return new URL(url).hostname.replace('www.', '');
-  } catch {
-    return url;
-  }
-}
+import { getDomain, getPlatformIconName } from '../lib/link-utils';
 ---
 
 <div class="link-editor">
@@ -74,7 +48,7 @@ function getDomain(url: string): string {
           
           <div class="link-preview-mini">
             <div class="preview-icon">
-              <span class="material-symbols-outlined">{getPlatformIcon(link.url)}</span>
+              <span class="material-symbols-outlined">{getPlatformIconName(link.url)}</span>
             </div>
             <div class="preview-content">
               <span class="preview-title">{link.title}</span>
@@ -226,6 +200,7 @@ function getDomain(url: string): string {
   // dont apply lang="ts" to this script|| astro default script is ts 
   import type { Link } from '../types/linktree';
   import { saveProfile } from '../lib/store';
+  import { getDomain, getFaviconUrl, getPlatformIconName } from '../lib/link-utils';
 
   // State
   let links: Link[] = [];
@@ -260,47 +235,7 @@ function getDomain(url: string): string {
   const previewUrl = document.getElementById('preview-url-display');
   const previewIcon = document.getElementById('preview-card-icon');
 
-  // Get domain from URL
-  function getDomainName(url: string): string {
-    try {
-      const urlObj = new URL(url);
-      return urlObj.hostname.replace('www.', '');
-    } catch {
-      return url;
-    }
-  }
 
-  /**
-   * Get favicon URL for a domain
-   */
-  function getFaviconUrl(url: string): string {
-    try {
-      const domain = new URL(url).hostname
-      return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
-    } catch {
-      return ''
-    }
-  }
-
-  // Get platform icon name
-  function getPlatformIcon(url: string): string {
-    const domain = getDomainName(url).toLowerCase();
-    
-    if (domain.includes('github')) return 'code';
-    if (domain.includes('twitter') || domain.includes('x.com')) return 'tag';
-    if (domain.includes('instagram')) return 'photo_camera';
-    if (domain.includes('youtube')) return 'play_circle';
-    if (domain.includes('linkedin')) return 'work';
-    if (domain.includes('tiktok')) return 'music_note';
-    if (domain.includes('discord')) return 'chat';
-    if (domain.includes('twitch')) return 'sports_esports';
-    if (domain.includes('reddit')) return 'forum';
-    if (domain.includes('medium')) return 'article';
-    if (domain.includes('spotify')) return 'music_note';
-    if (domain.includes('email')) return 'email';
-    if (domain.includes('figma')) return 'design_services';
-    return 'link';
-  }
 
   // Open modal
   function openModal(linkId?: string) {
@@ -358,7 +293,7 @@ function getDomain(url: string): string {
     const customUrl = imageInput?.value?.trim();
     
     if (previewTitle) previewTitle.textContent = title;
-    if (previewUrl) previewUrl.textContent = getDomainName(url);
+    if (previewUrl) previewUrl.textContent = getDomain(url);
     if (previewIcon) {
       previewIcon.innerHTML = '';
       
@@ -373,7 +308,7 @@ function getDomain(url: string): string {
           
           const span = document.createElement('span');
           span.className = 'material-symbols-outlined';
-          span.textContent = getPlatformIcon(url);
+          span.textContent = getPlatformIconName(url);
           span.style.display = 'none';
           
           img.onerror = () => {
@@ -386,7 +321,7 @@ function getDomain(url: string): string {
         } else {
           const span = document.createElement('span');
           span.className = 'material-symbols-outlined';
-          span.textContent = getPlatformIcon(url);
+          span.textContent = getPlatformIconName(url);
           previewIcon.appendChild(span);
         }
       } else if (selectedThumbType === 'preview') {
@@ -433,7 +368,7 @@ function getDomain(url: string): string {
       } else {
         const span = document.createElement('span');
         span.className = 'material-symbols-outlined';
-        span.textContent = getPlatformIcon(url);
+        span.textContent = getPlatformIconName(url);
         previewIcon.appendChild(span);
       }
     }
@@ -618,7 +553,7 @@ function getDomain(url: string): string {
           
           const span = document.createElement('span');
           span.className = 'material-symbols-outlined';
-          span.textContent = getPlatformIcon(link.url);
+          span.textContent = getPlatformIconName(link.url);
           span.style.display = 'none';
           
           img.onerror = () => {
@@ -631,7 +566,7 @@ function getDomain(url: string): string {
         } else {
           const span = document.createElement('span');
           span.className = 'material-symbols-outlined';
-          span.textContent = getPlatformIcon(link.url);
+          span.textContent = getPlatformIconName(link.url);
           iconContainer.appendChild(span);
         }
       } else if (thumbType === 'preview') {
@@ -678,7 +613,7 @@ function getDomain(url: string): string {
       } else {
         const span = document.createElement('span');
         span.className = 'material-symbols-outlined';
-        span.textContent = getPlatformIcon(link.url);
+        span.textContent = getPlatformIconName(link.url);
         iconContainer.appendChild(span);
       }
       
@@ -686,7 +621,7 @@ function getDomain(url: string): string {
       title.textContent = link.title;
       
       const url = card.querySelector('.preview-url') as HTMLElement;
-      url.textContent = getDomainName(link.url);
+      url.textContent = getDomain(link.url);
       
       card.addEventListener('dragstart', (((e: DragEvent) => handleDragStart(e)) as any));
       card.addEventListener('dragend', (((e: DragEvent) => handleDragEnd(e)) as any));

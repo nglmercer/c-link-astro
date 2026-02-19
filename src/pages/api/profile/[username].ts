@@ -39,7 +39,9 @@ export const GET: APIRoute = async (context) => {
         title: l.title,
         url: l.url,
         order: l.order,
-        isActive: l.isActive
+        isActive: l.isActive,
+        thumbnailType: l.thumbnailType as any,
+        thumbnailUrl: l.thumbnailUrl || undefined
       }))
     }
 

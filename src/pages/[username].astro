@@ -6,7 +6,8 @@ import {
   getDomain,
   themes,
   DEFAULT_THEME,
-  getFaviconUrl
+  getFaviconUrl,
+  getInitials
 } from '../lib/profile'
 import { getProfileForSEO } from '../lib/profile.server'
 
@@ -42,9 +43,9 @@ const themeConfig = themes[initialTheme] || themes[DEFAULT_THEME]
                 alt={profile?.displayName || username} 
                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
               />
-              <span class="initial" style="display: none;">{profile?.displayName?.charAt(0).toUpperCase() || username.charAt(0).toUpperCase()}</span>
+              <span class="initial" style="display: none;">{getInitials(profile?.displayName || username)}</span>
             ) : (
-              <span class="initial">{profile?.displayName?.charAt(0).toUpperCase() || username.charAt(0).toUpperCase()}</span>
+              <span class="initial">{getInitials(profile?.displayName || username)}</span>
             )}
           </div>
           <div class="avatar-glow"></div>
