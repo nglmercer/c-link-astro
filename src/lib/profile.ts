@@ -41,7 +41,7 @@ export const themes: ThemeConfig = {
     cardBorder: 'rgba(255, 255, 255, 0.2)',
     text: '#ffffff',
     subtext: 'rgba(255, 255, 255, 0.7)',
-    accent: '#ffffff',
+    accent: '#a78bfa',
     glass: true
   },
   ocean: {
@@ -61,7 +61,7 @@ export const themes: ThemeConfig = {
     cardBorder: 'rgba(255, 255, 255, 0.25)',
     text: '#ffffff',
     subtext: 'rgba(255, 255, 255, 0.8)',
-    accent: '#ffffff',
+    accent: '#f97316',
     glass: true
   },
   forest: {
@@ -435,7 +435,11 @@ export function updateProfileDisplay(profile: UserProfile): void {
       avatarEl.appendChild(img)
     } else {
       const text = profile.displayName || profile.username || '?'
-      avatarEl.textContent = text.charAt(0).toUpperCase()
+      avatarEl.textContent = ''
+      const span = document.createElement('span')
+      span.className = 'initial'
+      span.textContent = text.charAt(0).toUpperCase()
+      avatarEl.appendChild(span)
     }
   }
 }

@@ -279,12 +279,14 @@ const hasClaimedUsername = !!profile?.username
   document.addEventListener('links-updated', (e: Event) => {
     const customEvent = e as CustomEvent<Link[]>;
     currentLinks = customEvent.detail;
+    (window as any).currentLinks = currentLinks;
   });
 
   // Listen for theme updates from ProfileForm
   document.addEventListener('theme-updated', (e: Event) => {
     const customEvent = e as CustomEvent<string>;
     currentTheme = customEvent.detail;
+    (window as any).currentTheme = currentTheme;
   });
 
   // Save button
