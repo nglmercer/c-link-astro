@@ -68,8 +68,9 @@ function getDomain(url: string): string {
         </p>
         
         <div class="preview-links" id="preview-links">
+          <!-- Initial server-side rendering or empty state -->
           {links.length === 0 ? (
-            <p class="preview-empty">No links yet</p>
+            <div class="preview-empty">No links added yet</div>
           ) : (
             links.slice(0, 5).map((link) => (
               <div class="preview-link-item">
@@ -77,12 +78,9 @@ function getDomain(url: string): string {
                   {getPlatformIconName(link.url)}
                 </span>
                 <span class="preview-link-title">{link.title}</span>
-                <span class="material-symbols-outlined preview-link-arrow">open_in_new</span>
+                <span class="material-symbols-outlined preview-link-arrow">chevron_right</span>
               </div>
             ))
-          )}
-          {links.length > 5 && (
-            <p class="preview-more">+{links.length - 5} more links</p>
           )}
         </div>
         
@@ -93,14 +91,27 @@ function getDomain(url: string): string {
       </div>
     </div>
   </div>
+
+  <!-- Templates -->
+  <template id="preview-link-template">
+    <div class="preview-link-item">
+      <span class="material-symbols-outlined preview-link-icon"></span>
+      <span class="preview-link-title"></span>
+      <span class="material-symbols-outlined preview-link-arrow">chevron_right</span>
+    </div>
+  </template>
+
+  <template id="preview-empty-template">
+    <div class="preview-empty">No links added yet</div>
+  </template>
 </div>
 
 <script>
+  // dont apply lang="ts" to this script|| astro default script is ts 
   // Update preview when form values change
   const usernameInput = document.getElementById('username') as HTMLInputElement
   const displayNameInput = document.getElementById('displayName') as HTMLInputElement
   const bioInput = document.getElementById('bio') as HTMLTextAreaElement
-  
   const previewName = document.getElementById('preview-name')
   const previewBio = document.getElementById('preview-bio')
   const previewScreen = document.getElementById('preview-screen')
@@ -108,6 +119,7 @@ function getDomain(url: string): string {
   const previewLinks = document.getElementById('preview-links')
   
   // Use the themes object from profile.ts
+  import type { Link } from '../types/linktree';
   import { themes } from '../lib/profile'
 
   function updatePreview() {
@@ -153,6 +165,72 @@ function getDomain(url: string): string {
       if (title) title.style.color = theme.text
     })
   }
+
+  function getDomain(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname.replace('www.', '');
+    } catch {
+      return url;
+    }
+  }
+
+  function getPlatformIconName(url: string): string {
+    const domain = getDomain(url).toLowerCase();
+    
+    if (domain.includes('github')) return 'code';
+    if (domain.includes('twitter') || domain.includes('x.com')) return 'tag';
+    if (domain.includes('instagram')) return 'photo_camera';
+    if (domain.includes('youtube')) return 'play_circle';
+    if (domain.includes('linkedin')) return 'work';
+    if (domain.includes('tiktok')) return 'music_note';
+    if (domain.includes('discord')) return 'chat';
+    if (domain.includes('twitch')) return 'sports_esports';
+    if (domain.includes('reddit')) return 'forum';
+    if (domain.includes('medium')) return 'article';
+    return 'link';
+  }
+
+  function updateLinks(links: Link[]) {
+    const container = document.getElementById('preview-links');
+    const template = document.getElementById('preview-link-template') as HTMLTemplateElement;
+    const emptyTemplate = document.getElementById('preview-empty-template') as HTMLTemplateElement;
+    
+    if (!container || !template || !emptyTemplate) return;
+    
+    container.innerHTML = '';
+
+    const activeLinks = links.filter(l => l.isActive);
+    
+    if (activeLinks.length === 0) {
+      container.appendChild(emptyTemplate.content.cloneNode(true));
+      return;
+    }
+
+    const currentThemeName = document.querySelector('.theme-option.active')?.getAttribute('data-theme') || 'gradient';
+    const theme = themes[currentThemeName as any] || themes['gradient'];
+
+    activeLinks.slice(0, 6).forEach(link => {
+      const clone = template.content.cloneNode(true) as DocumentFragment;
+      const item = clone.querySelector('.preview-link-item') as HTMLElement;
+      const icon = clone.querySelector('.preview-link-icon') as HTMLElement;
+      const title = clone.querySelector('.preview-link-title') as HTMLElement;
+      
+      item.style.background = theme.cardBg;
+      icon.textContent = getPlatformIconName(link.url);
+      title.textContent = link.title;
+      title.style.color = theme.text;
+      
+      container.appendChild(clone);
+    });
+
+    if (activeLinks.length > 6) {
+      const more = document.createElement('p');
+      more.className = 'preview-more';
+      more.textContent = `+${activeLinks.length - 6} more links`;
+      container.appendChild(more);
+    }
+  }
   
   usernameInput?.addEventListener('input', updatePreview)
   displayNameInput?.addEventListener('input', updatePreview)
@@ -162,6 +240,12 @@ function getDomain(url: string): string {
   document.addEventListener('theme-updated', (e: Event) => {
     const customEvent = e as CustomEvent<string>;
     updateTheme(customEvent.detail)
+  });
+
+  // Listen for links updates
+  document.addEventListener('links-updated', (e: Event) => {
+    const customEvent = e as CustomEvent<Link[]>;
+    updateLinks(customEvent.detail);
   });
 
   // Initial theme application
@@ -205,13 +289,31 @@ function getDomain(url: string): string {
   }
 
   .preview-screen {
-    width: 280px;
-    height: 500px;
-    background: linear-gradient(180deg, #f0f9ff 0%, #fff 100%);
-    border-radius: 24px;
-    border: 8px solid #1f2937;
+    width: 310px;
+    height: 620px;
+    background: white;
+    border-radius: 48px;
+    border: 12px solid #1f2937;
     overflow: hidden;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    box-shadow: 
+      0 25px 60px rgba(0, 0, 0, 0.2),
+      0 0 0 2px rgba(255, 255, 255, 0.1);
+    position: relative;
+    transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .preview-screen::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 25px;
+    background: #1f2937;
+    border-bottom-left-radius: 18px;
+    border-bottom-right-radius: 18px;
+    z-index: 10;
   }
 
   .preview-content {
@@ -272,13 +374,14 @@ function getDomain(url: string): string {
   .preview-link-item {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
+    gap: 0.75rem;
     width: 100%;
-    padding: 0.75rem;
+    padding: 0.875rem 1rem;
     background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 14px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease;
   }
 
   .preview-link-icon {
