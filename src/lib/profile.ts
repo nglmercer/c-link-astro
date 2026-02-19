@@ -1,11 +1,9 @@
-// Profile utilities - reusable functions for profile pages
-
-import { clerkClient } from '@clerk/astro/server'
+import { db, User, Link as LinkTable, eq } from 'astro:db'
 import type { AstroGlobal } from 'astro'
-import type { UserProfile, Link, ThemeName } from '../types/linktree'
+import type { UserProfile, Link as LinkType, ThemeName } from '../types/linktree'
 
 // Re-export types for convenience
-export type { UserProfile, Link, ThemeName }
+export type { UserProfile, LinkType as Link, ThemeName }
 
 // ============================================
 // Types
@@ -244,7 +242,7 @@ export function truncate(text: string, maxLength: number): string {
 /**
  * Generate HTML for a link card
  */
-export function renderLinkCard(link: Link, index: number): string {
+export function renderLinkCard(link: LinkType, index: number): string {
   const platform = getPlatformIcon(link.url)
   const domain = getDomain(link.url)
   
@@ -310,7 +308,7 @@ export function renderLoading(): string {
 /**
  * Generate all links HTML
  */
-export function renderLinks(links: Link[]): string {
+export function renderLinks(links: LinkType[]): string {
   if (links.length === 0) {
     return renderEmptyLinks()
   }
@@ -449,33 +447,73 @@ export function isReservedRoute(username: string): boolean {
 /**
  * Find a user by username in Clerk's user list
  */
-export async function findUserByUsername(clerk: ReturnType<typeof clerkClient>, username: string): Promise<{
-  user: any;
-  profile: UserProfile | null;
-} | null> {
+/**
+ * Find a user by ID in Astro DB
+ */
+export async function findUserById(id: string): Promise<UserProfile | null> {
   try {
-    const usersResponse = await clerk.users.getUserList({ limit: 100 })
-    const usersArray = Array.isArray(usersResponse) 
-      ? usersResponse 
-      : (usersResponse.data || [])
+    const users = await db.select().from(User).where(eq(User.id, id)).limit(1)
     
-    const user = usersArray.find((u: any) => {
-      const metadata = u.publicMetadata as Record<string, any>
-      return metadata?.profile?.username === username
-    })
+    if (users.length === 0) return null
     
-    if (!user) return null
+    const userData = users[0]
+    const linksData = await db.select().from(LinkTable).where(eq(LinkTable.userId, userData.id))
     
-    const metadata = user.publicMetadata as Record<string, any>
-    const profile = metadata?.profile as UserProfile || null
-    
-    return { user, profile }
+    return {
+      id: userData.id,
+      username: userData.username,
+      displayName: userData.displayName,
+      bio: userData.bio || '',
+      theme: userData.theme as any,
+      links: linksData.map(l => ({
+        id: l.id,
+        title: l.title,
+        url: l.url,
+        order: l.order,
+        isActive: l.isActive
+      }))
+    }
   } catch (error) {
-    console.error('Error finding user by username:', error)
+    console.error('Error finding user by ID in DB:', error)
     return null
   }
 }
 
+/**
+ * Find a user by username in Astro DB
+ */
+export async function findUserByUsername(username: string): Promise<UserProfile | null> {
+  try {
+    const users = await db.select().from(User).where(eq(User.username, username)).limit(1)
+    
+    if (users.length === 0) return null
+    
+    const userData = users[0]
+    const linksData = await db.select().from(LinkTable).where(eq(LinkTable.userId, userData.id))
+    
+    return {
+      id: userData.id,
+      username: userData.username,
+      displayName: userData.displayName,
+      bio: userData.bio || '',
+      theme: userData.theme as any,
+      links: linksData.map(l => ({
+        id: l.id,
+        title: l.title,
+        url: l.url,
+        order: l.order,
+        isActive: l.isActive
+      }))
+    }
+  } catch (error) {
+    console.error('Error finding user by username in DB:', error)
+    return null
+  }
+}
+
+/**
+ * Get profile data for SEO/social previews (server-side)
+ */
 /**
  * Get profile data for SEO/social previews (server-side)
  */
@@ -488,10 +526,9 @@ export async function getProfileForSEO(Astro: AstroGlobal, username: string): Pr
   const defaultDescription = `Check out ${username}'s links on C-Link`
   
   try {
-    const clerk = clerkClient(Astro)
-    const result = await findUserByUsername(clerk, username)
+    const profile = await findUserByUsername(username)
     
-    if (!result || !result.profile) {
+    if (!profile) {
       return {
         profile: null,
         seoTitle: defaultTitle,
@@ -499,7 +536,6 @@ export async function getProfileForSEO(Astro: AstroGlobal, username: string): Pr
       }
     }
     
-    const { profile } = result
     const bioPart = profile.bio ? ` - ${profile.bio}` : ''
     const linksCount = profile.links?.length || 0
     

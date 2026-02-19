@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro'
-import { clerkClient } from '@clerk/astro/server'
+import { db, User, eq, and, ne } from 'astro:db'
 
 export const GET: APIRoute = async (context) => {
   const url = new URL(context.request.url)
@@ -28,24 +28,21 @@ export const GET: APIRoute = async (context) => {
   }
 
   try {
-    const clerk = clerkClient(context)
     const auth = context.locals.auth()
     const currentUserId = auth?.userId
 
-    // Get all users and check
-    const usersResponse = await clerk.users.getUserList({ limit: 100 })
-    const usersArray = Array.isArray(usersResponse) 
-      ? usersResponse 
-      : (usersResponse.data || [])
+    // Check if username exists in DB
+    // If currentUserId exists, we exclude the current user from the check
+    const existingUser = await db.select()
+      .from(User)
+      .where(
+        currentUserId 
+          ? and(eq(User.username, username), ne(User.id, currentUserId))
+          : eq(User.username, username)
+      )
+      .limit(1)
 
-    // Find if username is taken
-    const userWithUsername = usersArray.find((user: any) => {
-      if (currentUserId && user.id === currentUserId) return false
-      const metadata = user.publicMetadata as Record<string, any>
-      return metadata?.profile?.username?.toLowerCase() === username.toLowerCase()
-    })
-
-    if (userWithUsername) {
+    if (existingUser.length > 0) {
       return new Response(JSON.stringify({ available: false, reason: 'Username is already taken' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
@@ -57,7 +54,7 @@ export const GET: APIRoute = async (context) => {
       headers: { 'Content-Type': 'application/json' }
     })
   } catch (error) {
-    console.error('Error checking username:', error)
+    console.error('Error checking username in DB:', error)
     return new Response(JSON.stringify({ error: 'Failed to check username' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

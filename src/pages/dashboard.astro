@@ -7,24 +7,24 @@ import LinkEditor from '../components/LinkEditor.astro'
 import ProfilePreview from '../components/ProfilePreview.astro'
 import type { UserProfile } from '../types/linktree'
 
+import { findUserById } from '../lib/profile'
+
 // Get user ID from Clerk auth via locals
 const clerkAuth = Astro.locals.auth()
 const userId = clerkAuth?.userId
-const clerk = clerkClient(Astro)
 
-// Get user profile from Clerk metadata
-let profile: UserProfile | undefined
-let username = 'user'
+// Get user profile from Astro DB
+let profile: UserProfile | null = null
+let username = userId?.slice(0, 12) || 'user'
 
 if (userId) {
   try {
-    const user = await clerk.users.getUser(userId)
-    const metadata = user.publicMetadata as Record<string, any>
-    profile = metadata?.profile
-    username = profile?.username || userId.slice(0, 12)
+    profile = await findUserById(userId)
+    if (profile) {
+      username = profile.username
+    }
   } catch (e) {
-    console.error('Error fetching user:', e)
-    username = userId.slice(0, 12)
+    console.error('Error fetching user from DB:', e)
   }
 }
 

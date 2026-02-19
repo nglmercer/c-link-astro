@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro'
-import { clerkClient } from '@clerk/astro/server'
-import type { UserProfile } from '../../../types/linktree'
+import { db, User, Link, eq } from 'astro:db'
+import type { UserProfile, Link as LinkType } from '../../../types/linktree'
 
 export const POST: APIRoute = async (context) => {
   const auth = context.locals.auth()
@@ -16,39 +16,59 @@ export const POST: APIRoute = async (context) => {
     const body = await context.request.json()
     const { username, displayName, bio, links, theme } = body
 
-    const clerk = clerkClient(context)
-    
-    // Get current user metadata
-    const user = await clerk.users.getUser(auth.userId)
-    const currentMetadata = user.publicMetadata as Record<string, any>
-    
-    // Update public metadata with profile data
+    // 1. Upsert the User profile
+    await db.insert(User).values({
+      id: auth.userId,
+      username: username || auth.userId.slice(0, 12),
+      displayName: displayName || 'User',
+      bio: bio || '',
+      theme: theme || 'gradient',
+      updatedAt: new Date()
+    }).onConflictDoUpdate({
+      target: User.id,
+      set: {
+        username: username || auth.userId.slice(0, 12),
+        displayName: displayName || 'User',
+        bio: bio || '',
+        theme: theme || 'gradient',
+        updatedAt: new Date()
+      }
+    })
+
+    // 2. Handle Links
+    // For simplicity, we delete and re-insert links for this user
+    if (links && Array.isArray(links)) {
+      await db.delete(Link).where(eq(Link.userId, auth.userId))
+      
+      if (links.length > 0) {
+        const linksToInsert = links.map((link: LinkType, index: number) => ({
+          id: link.id || crypto.randomUUID(),
+          userId: auth.userId,
+          title: link.title,
+          url: link.url,
+          order: index,
+          isActive: link.isActive !== undefined ? link.isActive : true
+        }))
+        
+        await db.insert(Link).values(linksToInsert)
+      }
+    }
+
     const profileData: UserProfile = {
       id: auth.userId,
-      username: username || currentMetadata?.profile?.username || auth.userId.slice(0, 12),
-      displayName: displayName || currentMetadata?.profile?.displayName || auth.userId.slice(0, 8),
-      bio: bio || currentMetadata?.profile?.bio || '',
-      theme: theme || currentMetadata?.profile?.theme || 'gradient',
-      links: links || currentMetadata?.profile?.links || []
+      username: username || auth.userId.slice(0, 12),
+      displayName: displayName || 'User',
+      bio: bio || '',
+      theme: (theme as any) || 'gradient',
+      links: links || []
     }
-
-    // Merge with existing metadata
-    const newMetadata = {
-      ...currentMetadata,
-      profile: profileData
-    }
-
-    // Update user metadata
-    await clerk.users.updateUser(auth.userId, {
-      publicMetadata: newMetadata
-    })
 
     return new Response(JSON.stringify({ success: true, profile: profileData }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     })
   } catch (error) {
-    console.error('Error saving profile:', error)
+    console.error('Error saving profile to DB:', error)
     return new Response(JSON.stringify({ error: 'Failed to save profile' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
