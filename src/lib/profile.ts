@@ -139,6 +139,22 @@ export const DEFAULT_THEME: ThemeName = 'gradient'
 // Platform Icons
 // ============================================
 
+/**
+ * Get favicon URL for a domain
+ */
+export function getFaviconUrl(url: string): string {
+  try {
+    const domain = new URL(url).hostname
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
+  } catch {
+    return ''
+  }
+}
+
+// ============================================
+// Platform Icons
+// ============================================
+
 const platformIcons: Record<string, PlatformIcon> = {
   'github': { icon: 'code', color: '#24292e' },
   'twitter': { icon: 'tag', color: '#1da1f2' },
@@ -301,13 +317,13 @@ export function displayLinks(container: HTMLElement, links: LinkType[], themeNam
     const item = clone.querySelector('.link-item') as HTMLElement
     const card = clone.querySelector('.link-card') as HTMLAnchorElement
     const iconWrapper = clone.querySelector('.link-icon') as HTMLElement
-    const icon = clone.querySelector('.link-icon .material-symbols-outlined') as HTMLElement
     const title = clone.querySelector('.link-title') as HTMLElement
     const urlDisplay = clone.querySelector('.link-url') as HTMLElement
     const arrow = clone.querySelector('.link-arrow') as HTMLElement
     
     const platform = getPlatformIcon(link.url)
     const domain = getDomain(link.url)
+    const favicon = getFaviconUrl(link.url)
     
     // Set content and styles
     item.style.animationDelay = `${index * 0.1}s`
@@ -316,7 +332,36 @@ export function displayLinks(container: HTMLElement, links: LinkType[], themeNam
     
     iconWrapper.style.background = `${platform.color}15`
     iconWrapper.style.color = platform.color
-    icon.textContent = platform.icon
+    
+    // Clear old icon/image
+    iconWrapper.textContent = ''
+    
+    if (favicon) {
+      const img = document.createElement('img')
+      img.src = favicon
+      img.className = 'link-favicon'
+      img.style.width = '24px'
+      img.style.height = '24px'
+      img.style.borderRadius = '4px'
+      
+      const span = document.createElement('span')
+      span.className = 'material-symbols-outlined'
+      span.textContent = platform.icon
+      span.style.display = 'none'
+      
+      img.onerror = () => {
+        img.style.display = 'none'
+        span.style.display = 'block'
+      }
+      
+      iconWrapper.appendChild(img)
+      iconWrapper.appendChild(span)
+    } else {
+      const span = document.createElement('span')
+      span.className = 'material-symbols-outlined'
+      span.textContent = platform.icon
+      iconWrapper.appendChild(span)
+    }
     
     title.textContent = link.title
     urlDisplay.textContent = domain

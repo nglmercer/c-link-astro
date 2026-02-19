@@ -1,6 +1,13 @@
 ---
 import Layout from '../layouts/Layout.astro'
-import { isReservedRoute, getPlatformIcon, getDomain, themes, DEFAULT_THEME } from '../lib/profile'
+import {
+  isReservedRoute,
+  getPlatformIcon,
+  getDomain,
+  themes,
+  DEFAULT_THEME,
+  getFaviconUrl
+} from '../lib/profile'
 import { getProfileForSEO } from '../lib/profile.server'
 
 const { username } = Astro.params
@@ -29,9 +36,9 @@ const themeConfig = themes[initialTheme] || themes[DEFAULT_THEME]
         <div class="avatar-wrapper">
           <div class="avatar" id="avatar">
             {profile?.avatarUrl ? (
-              <img src={profile.avatarUrl} alt={profile?.displayName || username} />
+              <img class="avatar-image" src={profile.avatarUrl} alt={profile?.displayName || username} />
             ) : (
-              profile?.displayName?.charAt(0).toUpperCase() || username.charAt(0).toUpperCase()
+              <span class="initial">{profile?.displayName?.charAt(0).toUpperCase() || username.charAt(0).toUpperCase()}</span>
             )}
           </div>
           <div class="avatar-glow"></div>
@@ -62,6 +69,7 @@ const themeConfig = themes[initialTheme] || themes[DEFAULT_THEME]
           {profile?.links?.map((link, index) => {
             const platform = getPlatformIcon(link.url)
             const domain = getDomain(link.url)
+            const favicon = getFaviconUrl(link.url)
             return (
               <li class="link-item" style={`animation-delay: ${index * 0.1}s`}>
                 <a 
@@ -71,7 +79,15 @@ const themeConfig = themes[initialTheme] || themes[DEFAULT_THEME]
                   class="link-card"
                 >
                   <div class="link-icon" style={`background: ${platform.color}15; color: ${platform.color}`}>
-                    <span class="material-symbols-outlined">{platform.icon}</span>
+                    {favicon ? (
+                      <img 
+                        src={favicon} 
+                        alt="" 
+                        class="link-favicon" 
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                      />
+                    ) : null}
+                    <span class="material-symbols-outlined" style={favicon ? "display: none;" : ""}>{platform.icon}</span>
                   </div>
                   <div class="link-content">
                     <span class="link-title">{link.title}</span>
@@ -295,8 +311,12 @@ const themeConfig = themes[initialTheme] || themes[DEFAULT_THEME]
   .avatar {
     background: linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-text) 100%);
     color: var(--theme-bg);
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
   }
-
   .avatar-glow {
     position: absolute;
     top: 50%;
@@ -623,8 +643,12 @@ const themeConfig = themes[initialTheme] || themes[DEFAULT_THEME]
       width: 100px;
       height: 100px;
       font-size: 3rem;
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
     }
-
     .link-card {
       padding: 1.125rem 1.5rem;
       gap: 1.25rem;
@@ -644,5 +668,17 @@ const themeConfig = themes[initialTheme] || themes[DEFAULT_THEME]
   }
   ::-webkit-scrollbar-thumb:hover {
     background: var(--theme-accent);
+  }
+  /* Favicon Styles */
+  .link-favicon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+  }
+
+  .link-card:hover .link-favicon {
+    transform: scale(1.1);
   }
 </style>

@@ -216,7 +216,7 @@ function getDomain(url: string): string {
   const previewIcon = document.getElementById('preview-card-icon');
 
   // Get domain from URL
-  function getDomain(url: string): string {
+  function getDomainName(url: string): string {
     try {
       const urlObj = new URL(url);
       return urlObj.hostname.replace('www.', '');
@@ -225,9 +225,21 @@ function getDomain(url: string): string {
     }
   }
 
+  /**
+   * Get favicon URL for a domain
+   */
+  function getFaviconUrl(url: string): string {
+    try {
+      const domain = new URL(url).hostname
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
+    } catch {
+      return ''
+    }
+  }
+
   // Get platform icon name
-  function getPlatformIconName(url: string): string {
-    const domain = getDomain(url).toLowerCase();
+  function getPlatformIcon(url: string): string {
+    const domain = getDomainName(url).toLowerCase();
     
     if (domain.includes('github')) return 'code';
     if (domain.includes('twitter') || domain.includes('x.com')) return 'tag';
@@ -239,6 +251,9 @@ function getDomain(url: string): string {
     if (domain.includes('twitch')) return 'sports_esports';
     if (domain.includes('reddit')) return 'forum';
     if (domain.includes('medium')) return 'article';
+    if (domain.includes('spotify')) return 'music_note';
+    if (domain.includes('email')) return 'email';
+    if (domain.includes('figma')) return 'design_services';
     return 'link';
   }
 
@@ -283,11 +298,35 @@ function getDomain(url: string): string {
     const url = urlInput?.value || 'https://example.com';
     
     if (previewTitle) previewTitle.textContent = title;
-    if (previewUrl) previewUrl.textContent = getDomain(url);
+    if (previewUrl) previewUrl.textContent = getDomainName(url);
     if (previewIcon) {
-      const iconSpan = previewIcon.querySelector('.material-symbols-outlined');
-      if (iconSpan) {
-        iconSpan.textContent = getPlatformIconName(url);
+      previewIcon.innerHTML = '';
+      
+      const faviconUrl = getFaviconUrl(url);
+      if (faviconUrl) {
+        const img = document.createElement('img');
+        img.src = faviconUrl;
+        img.style.width = '24px';
+        img.style.height = '24px';
+        img.style.borderRadius = '4px';
+        
+        const span = document.createElement('span');
+        span.className = 'material-symbols-outlined';
+        span.textContent = getPlatformIcon(url);
+        span.style.display = 'none';
+        
+        img.onerror = () => {
+          img.style.display = 'none';
+          span.style.display = 'block';
+        };
+        
+        previewIcon.appendChild(img);
+        previewIcon.appendChild(span);
+      } else {
+        const span = document.createElement('span');
+        span.className = 'material-symbols-outlined';
+        span.textContent = getPlatformIcon(url);
+        previewIcon.appendChild(span);
       }
     }
   }
@@ -450,14 +489,42 @@ function getDomain(url: string): string {
       deleteBtn.setAttribute('data-id', link.id);
       deleteBtn.onclick = () => deleteLink(link.id);
       
-      const icon = card.querySelector('.preview-icon span') as HTMLElement;
-      icon.textContent = getPlatformIconName(link.url);
+      const iconContainer = card.querySelector('.preview-icon') as HTMLElement;
+      iconContainer.textContent = '';
+      
+      const faviconUrl = getFaviconUrl(link.url);
+      if (faviconUrl) {
+        const img = document.createElement('img');
+        img.src = faviconUrl;
+        img.className = 'preview-favicon';
+        img.style.width = '20px';
+        img.style.height = '20px';
+        img.style.borderRadius = '4px';
+        
+        const span = document.createElement('span');
+        span.className = 'material-symbols-outlined';
+        span.textContent = getPlatformIcon(link.url);
+        span.style.display = 'none';
+        
+        img.onerror = () => {
+          img.style.display = 'none';
+          span.style.display = 'block';
+        };
+        
+        iconContainer.appendChild(img);
+        iconContainer.appendChild(span);
+      } else {
+        const span = document.createElement('span');
+        span.className = 'material-symbols-outlined';
+        span.textContent = getPlatformIcon(link.url);
+        iconContainer.appendChild(span);
+      }
       
       const title = card.querySelector('.preview-title') as HTMLElement;
       title.textContent = link.title;
       
       const url = card.querySelector('.preview-url') as HTMLElement;
-      url.textContent = getDomain(link.url);
+      url.textContent = getDomainName(link.url);
       
       card.addEventListener('dragstart', (((e: DragEvent) => handleDragStart(e)) as any));
       card.addEventListener('dragend', (((e: DragEvent) => handleDragEnd(e)) as any));
@@ -681,24 +748,29 @@ function getDomain(url: string): string {
     flex-direction: column;
     gap: 0.25rem;
     min-width: 0;
+    overflow: hidden;
   }
 
   .preview-title {
+    display: block;
     font-weight: 700;
     color: #111827;
     font-size: 1rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 100%;
     letter-spacing: -0.01em;
   }
 
   .preview-url {
+    display: block;
     font-size: 0.8rem;
     color: #6b7280;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 100%;
   }
 
   .external-icon {

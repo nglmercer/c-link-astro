@@ -7,7 +7,7 @@ import LinkEditor from '../components/LinkEditor.astro'
 import ProfilePreview from '../components/ProfilePreview.astro'
 import type { UserProfile } from '../types/linktree'
 
-import { findUserById } from '../lib/profile.server'
+import { findUserById, findUserByUsername } from '../lib/profile.server'
 
 // Get user ID from Clerk auth via locals
 const clerkAuth = Astro.locals.auth()
@@ -29,16 +29,31 @@ const defaultAvatar = clerkUser?.imageUrl || ''
 
 // Get user profile from Astro DB
 let profile: UserProfile | null = null
-let username = userId?.slice(0, 12) || 'user'
+let username = ''
 
 if (userId) {
   try {
     profile = await findUserById(userId)
     if (profile) {
       username = profile.username
+    } else {
+      // Logic for generating a unique default username
+      const email = clerkUser?.emailAddresses[0]?.emailAddress || ''
+      let baseUsername = email.split('@')[0] || 'user'
+      baseUsername = baseUsername.toLowerCase().replace(/[^a-z0-9_-]/g, '')
+      
+      // Check if base exists
+      const existing = await findUserByUsername(baseUsername)
+      if (!existing) {
+        username = baseUsername
+      } else {
+        // Find a random available one
+        username = `${baseUsername}${Math.floor(100 + Math.random() * 900)}`
+      }
     }
   } catch (e) {
     console.error('Error fetching user from DB:', e)
+    username = userId?.slice(0, 12) || 'user'
   }
 }
 
@@ -62,7 +77,12 @@ const hasClaimedUsername = !!profile?.username
   </SignedOut>
 
   <SignedIn>
-    <div class="dashboard" data-default-avatar={defaultAvatar}>
+    <div 
+      class="dashboard" 
+      data-default-avatar={defaultAvatar}
+      data-initial-avatar={profile?.avatarUrl || defaultAvatar}
+      data-initial-theme={profile?.theme || 'gradient'}
+    >
       <div class="dashboard-header">
         <div class="header-info">
           <h1>My C-Link</h1>
@@ -127,8 +147,9 @@ const hasClaimedUsername = !!profile?.username
   let isCheckingUsername = false;
   let checkTimeout: ReturnType<typeof setTimeout> | null = null;
   let currentLinks: Link[] = JSON.parse(document.getElementById('links-container')?.getAttribute('data-initial-links') || '[]');
-  let currentTheme = (document.querySelector('.theme-option.active') as HTMLElement)?.dataset.theme || 'gradient';
-  let currentAvatar = document.querySelector('.dashboard')?.getAttribute('data-default-avatar') || '';
+  const dashboard = document.querySelector('.dashboard') as HTMLElement;
+  let currentTheme = dashboard?.getAttribute('data-initial-theme') || 'gradient';
+  let currentAvatar = dashboard?.getAttribute('data-initial-avatar') || '';
 
   // Expose for preview iframe
   (window as any).currentLinks = currentLinks;
