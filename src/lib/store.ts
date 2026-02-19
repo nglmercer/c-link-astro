@@ -1,26 +1,9 @@
-// Global state store with TypeScript support
-// This store uses CustomEvents to communicate between components
+// ============================================
+// Client-side State Store
+// Uses CustomEvents to communicate between components
+// ============================================
 
-export interface Link {
-  id: string
-  title: string
-  url: string
-  icon?: string
-  order: number
-  isActive: boolean
-  thumbnailType?: 'favicon' | 'preview' | 'custom' | 'platform'
-  thumbnailUrl?: string
-}
-
-export interface UserProfile {
-  id: string
-  username: string
-  displayName: string
-  bio?: string
-  avatarUrl?: string
-  theme: 'light' | 'dark' | 'gradient' | 'ocean' | 'sunset' | 'forest' | 'midnight' | 'cyberpunk' | 'marshmallow' | 'emerald'
-  links: Link[]
-}
+import type { UserProfile, Link, ThemeName } from '../types/linktree'
 
 export interface AppState {
   profile: UserProfile | null
@@ -213,7 +196,7 @@ export async function saveProfile(data: {
   displayName?: string
   bio?: string
   avatarUrl?: string
-  theme?: string
+  theme?: ThemeName
   links?: Link[]
 }): Promise<UserProfile | null> {
   setSaving(true)

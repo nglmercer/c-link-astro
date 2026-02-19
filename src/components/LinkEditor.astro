@@ -1,20 +1,12 @@
 ---
-interface Link {
-  id: string;
-  title: string;
-  url: string;
-  icon?: string;
-  order: number;
-  isActive: boolean;
-}
+import type { Link } from '../types/linktree';
+import { getDomain, getPlatformIconName } from '../lib/profile';
 
 interface Props {
   links: Link[];
 }
 
 const { links = [] } = Astro.props;
-
-import { getDomain, getPlatformIconName } from '../lib/link-utils';
 ---
 
 <div class="link-editor">
@@ -199,7 +191,7 @@ import { getDomain, getPlatformIconName } from '../lib/link-utils';
 <script>
   // dont apply lang="ts" to this script|| astro default script is ts 
   import type { Link } from '../types/linktree';
-  import { saveProfile } from '../lib/store';
+
   import { getDomain, getFaviconUrl, getPlatformIconName } from '../lib/link-utils';
 
   // State

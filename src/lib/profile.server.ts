@@ -1,7 +1,7 @@
 import { db, User, Link as LinkTable, eq } from 'astro:db'
 import type { AstroGlobal } from 'astro'
 import type { UserProfile } from '../types/linktree'
-import { isReservedRoute } from './profile'
+import { isReservedRoute } from './format-utils'
 
 /**
  * Find a user by ID in Astro DB

@@ -1,12 +1,13 @@
-/**
- * Utility functions for link handling and domain parsing
- */
+// ============================================
+// Link Utilities
+// ============================================
 
 export interface PlatformIcon {
   icon: string
   color: string
 }
 
+// Platform icon mappings
 export const platformIcons: Record<string, PlatformIcon> = {
   'github': { icon: 'code', color: '#24292e' },
   'twitter': { icon: 'tag', color: '#1da1f2' },

@@ -1,3 +1,7 @@
+// ============================================
+// Core Type Definitions
+// ============================================
+
 export interface Link {
   id: string
   title: string
@@ -5,11 +9,21 @@ export interface Link {
   icon?: string
   order: number
   isActive: boolean
-  thumbnailType?: 'favicon' | 'preview' | 'custom'
+  thumbnailType?: 'favicon' | 'preview' | 'custom' | 'platform'
   thumbnailUrl?: string
 }
 
-export type ThemeName = 'light' | 'dark' | 'gradient' | 'ocean' | 'sunset' | 'forest' | 'midnight' | 'cyberpunk' | 'marshmallow' | 'emerald'
+export type ThemeName = 
+  | 'light' 
+  | 'dark' 
+  | 'gradient' 
+  | 'ocean' 
+  | 'sunset' 
+  | 'forest' 
+  | 'midnight' 
+  | 'cyberpunk' 
+  | 'marshmallow' 
+  | 'emerald'
 
 export interface UserProfile {
   id: string
