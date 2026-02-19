@@ -12,9 +12,11 @@ interface Props {
   displayName?: string;
   bio?: string;
   links?: Link[];
+  theme?: string;
 }
 
-const { username = '', displayName = '', bio = '', links = [] } = Astro.props;
+const { username = '', displayName = '', bio = '', links = [], theme = 'gradient' } = Astro.props;
+import { themes } from '../lib/profile'
 
 // Get platform icon name
 function getPlatformIconName(url: string): string {
@@ -53,9 +55,9 @@ function getDomain(url: string): string {
   </div>
   
   <div class="preview-device">
-    <div class="preview-screen">
-      <div class="preview-content">
-        <div class="preview-avatar">
+    <div class="preview-screen" id="preview-screen">
+      <div class="preview-content" id="preview-content">
+        <div class="preview-avatar" id="preview-avatar">
           {displayName ? displayName.charAt(0).toUpperCase() : (username ? username.charAt(0).toUpperCase() : '?')}
         </div>
         <h4 class="preview-name" id="preview-name">
@@ -93,15 +95,21 @@ function getDomain(url: string): string {
   </div>
 </div>
 
-<script define:vars={{ username: username || '', displayName: displayName || '', bio: bio || '' }}>
+<script>
   // Update preview when form values change
-  const usernameInput = document.getElementById('username')
-  const displayNameInput = document.getElementById('displayName')
-  const bioInput = document.getElementById('bio')
+  const usernameInput = document.getElementById('username') as HTMLInputElement
+  const displayNameInput = document.getElementById('displayName') as HTMLInputElement
+  const bioInput = document.getElementById('bio') as HTMLTextAreaElement
   
   const previewName = document.getElementById('preview-name')
   const previewBio = document.getElementById('preview-bio')
+  const previewScreen = document.getElementById('preview-screen')
+  const previewAvatar = document.getElementById('preview-avatar')
+  const previewLinks = document.getElementById('preview-links')
   
+  // Use the themes object from profile.ts
+  import { themes } from '../lib/profile'
+
   function updatePreview() {
     const usernameVal = usernameInput?.value?.trim() || ''
     const displayNameVal = displayNameInput?.value?.trim() || ''
@@ -121,10 +129,44 @@ function getDomain(url: string): string {
       previewBio.textContent = bioVal || 'Your bio will appear here...'
     }
   }
+
+  function updateTheme(themeName: string) {
+    const theme = themes[themeName] || themes['gradient']
+    
+    if (previewScreen) {
+      previewScreen.style.background = theme.background
+    }
+    
+    if (previewName) {
+      previewName.style.color = theme.text
+    }
+    
+    if (previewBio) {
+      previewBio.style.color = theme.subtext
+    }
+
+    // Apply to existing links in preview
+    const linkCards = previewLinks?.querySelectorAll('.preview-link-item')
+    linkCards?.forEach(card => {
+      (card as HTMLElement).style.background = theme.cardBg
+      const title = card.querySelector('.preview-link-title') as HTMLElement
+      if (title) title.style.color = theme.text
+    })
+  }
   
   usernameInput?.addEventListener('input', updatePreview)
   displayNameInput?.addEventListener('input', updatePreview)
   bioInput?.addEventListener('input', updatePreview)
+
+  // Listen for theme updates
+  document.addEventListener('theme-updated', (e: Event) => {
+    const customEvent = e as CustomEvent<string>;
+    updateTheme(customEvent.detail)
+  });
+
+  // Initial theme application
+  const initialTheme = document.querySelector('.theme-option.active')?.getAttribute('data-theme') || 'gradient';
+  updateTheme(initialTheme);
 </script>
 
 <style>

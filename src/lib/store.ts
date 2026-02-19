@@ -16,7 +16,7 @@ export interface UserProfile {
   displayName: string
   bio?: string
   avatarUrl?: string
-  theme: 'light' | 'dark' | 'gradient' | 'ocean' | 'sunset' | 'forest'
+  theme: 'light' | 'dark' | 'gradient' | 'ocean' | 'sunset' | 'forest' | 'midnight' | 'cyberpunk' | 'marshmallow' | 'emerald'
   links: Link[]
 }
 

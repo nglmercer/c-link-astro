@@ -67,6 +67,30 @@ export const themes: ThemeConfig = {
     cardBg: '#ffffff',
     text: '#111827',
     subtext: '#6b7280'
+  },
+  midnight: {
+    background: 'linear-gradient(135deg, #020617 0%, #0f172a 100%)',
+    cardBg: 'rgba(30, 41, 59, 0.7)',
+    text: '#f8fafc',
+    subtext: '#94a3b8'
+  },
+  cyberpunk: {
+    background: 'linear-gradient(135deg, #2e1065 0%, #701a75 50%, #4c1d95 100%)',
+    cardBg: 'rgba(255, 255, 255, 0.05)',
+    text: '#f5d0fe',
+    subtext: '#d8b4fe'
+  },
+  marshmallow: {
+    background: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
+    cardBg: 'rgba(255, 255, 255, 0.8)',
+    text: '#831843',
+    subtext: '#be185d'
+  },
+  emerald: {
+    background: 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)',
+    cardBg: 'rgba(255, 255, 255, 0.1)',
+    text: '#ecfdf5',
+    subtext: '#a7f3d0'
   }
 }
 
@@ -90,7 +114,6 @@ const platformIcons: Record<string, PlatformIcon> = {
   'reddit': { icon: 'forum', color: '#ff4500' },
   'medium': { icon: 'article', color: '#000000' },
   'codepen': { icon: 'code', color: '#1a1a1a' },
-  'stackoverflow': { icon: 'help', color: '#f48024' },
   'dribbble': { icon: 'palette', color: '#ea4c89' },
   'behance': { icon: 'palette', color: '#1769ff' },
   'snapchat': { icon: 'chat', color: '#fffc00' },
@@ -312,8 +335,8 @@ export function applyTheme(themeName: ThemeName = DEFAULT_THEME): void {
   }
   
   // Apply to cards
-  document.querySelectorAll('.link-card').forEach(card => {
-    (card as HTMLElement).style.background = theme.cardBg
+  document.querySelectorAll<HTMLElement>('.link-card').forEach(card => {
+    card.style.background = theme.cardBg
     card.style.color = theme.text
   })
   

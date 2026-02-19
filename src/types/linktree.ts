@@ -7,7 +7,7 @@ export interface Link {
   isActive: boolean
 }
 
-export type ThemeName = 'light' | 'dark' | 'gradient' | 'ocean' | 'sunset' | 'forest'
+export type ThemeName = 'light' | 'dark' | 'gradient' | 'ocean' | 'sunset' | 'forest' | 'midnight' | 'cyberpunk' | 'marshmallow' | 'emerald'
 
 export interface UserProfile {
   id: string
