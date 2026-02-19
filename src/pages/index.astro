@@ -10,7 +10,7 @@ import { SignedIn, SignedOut } from '@clerk/astro/components'
 >
   <div class="hero">
     <div class="hero-content">
-      <h1>Welcome to C-Link</h1>
+      <h1 class="gradient-text">Welcome to C-Link</h1>
       <p class="subtitle">Create your personal link tree and share all your links in one place</p>
       
       <SignedIn>
@@ -23,16 +23,19 @@ import { SignedIn, SignedOut } from '@clerk/astro/components'
     </div>
     
     <div class="features">
-      <div class="feature">
-        <h3>🌐 Custom Profile</h3>
+      <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <h3>Custom Profile</h3>
         <p>Personalize your page with your name, bio, and avatar</p>
       </div>
-      <div class="feature">
-        <h3>🔗 Manage Links</h3>
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <h3>Manage Links</h3>
         <p>Add, edit, and organize all your important links</p>
       </div>
-      <div class="feature">
-        <h3>📱 Mobile Friendly</h3>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>Mobile Friendly</h3>
         <p>Looks great on any device</p>
       </div>
     </div>
@@ -46,86 +49,112 @@ import { SignedIn, SignedOut } from '@clerk/astro/components'
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 3rem 1rem;
+    padding: var(--spacing-12) var(--spacing-4);
     text-align: center;
+    background-color: var(--bg-primary);
   }
 
   .hero-content {
     max-width: 600px;
-    margin-bottom: 3rem;
+    margin-bottom: var(--spacing-12);
   }
 
   h1 {
-    font-size: 3rem;
-    font-weight: 800;
-    margin: 0 0 1rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-size: var(--font-size-5xl);
+    font-weight: var(--font-weight-extrabold);
+    margin: 0 0 var(--spacing-4);
+    line-height: 1.1;
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .subtitle {
-    font-size: 1.25rem;
-    color: #666;
-    margin: 0 0 2rem;
+    font-size: var(--font-size-xl);
+    color: var(--text-secondary);
+    margin: 0 0 var(--spacing-8);
   }
 
   .cta-button {
     display: inline-block;
-    background: #2563eb;
-    color: white;
-    padding: 1rem 2rem;
-    border-radius: 8px;
+    background: var(--color-primary);
+    color: var(--text-inverse);
+    padding: var(--spacing-4) var(--spacing-8);
+    border-radius: var(--radius-xl);
     text-decoration: none;
-    font-weight: 600;
-    font-size: 1.1rem;
-    transition: background 0.2s, transform 0.2s;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-lg);
+    transition: all var(--transition-base);
   }
 
   .cta-button:hover {
-    background: #1d4ed8;
+    background: var(--color-primary-hover);
     transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
   }
 
   .cta-text {
-    color: #666;
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
   }
 
   .features {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--spacing-6);
     max-width: 800px;
     width: 100%;
   }
 
-  .feature {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    border: 1px solid #eee;
+  .feature-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    padding: var(--spacing-6);
+    border-radius: var(--radius-2xl);
     text-align: center;
+    transition: all var(--transition-base);
   }
 
-  .feature h3 {
-    margin: 0 0 0.5rem;
-    font-size: 1.1rem;
+  .feature-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
   }
 
-  .feature p {
+  .feature-icon {
+    font-size: var(--font-size-3xl);
+    margin-bottom: var(--spacing-3);
+  }
+
+  .feature-card h3 {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    margin: 0 0 var(--spacing-2);
+    color: var(--text-primary);
+  }
+
+  .feature-card p {
     margin: 0;
-    color: #666;
-    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 640px) {
     h1 {
-      font-size: 2rem;
+      font-size: var(--font-size-4xl);
     }
     
     .subtitle {
-      font-size: 1rem;
+      font-size: var(--font-size-base);
+    }
+    
+    .features {
+      grid-template-columns: 1fr;
     }
   }
 </style>

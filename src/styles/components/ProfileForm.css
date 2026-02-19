@@ -1,0 +1,105 @@
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.username-input-group {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.username-input-group:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.username-input-group .prefix {
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  border-right: 1px solid var(--border-primary);
+}
+
+.username-input-group input {
+  border: none;
+  border-radius: 0;
+  flex: 1;
+}
+
+.username-input-group input:focus {
+  box-shadow: none;
+}
+
+.username-status {
+  font-size: 0.85rem;
+  margin: 0;
+  min-height: 1.2em;
+}
+
+.username-status.available {
+  color: #10b981;
+}
+
+.username-status.taken {
+  color: #ef4444;
+}
+
+.username-status.checking {
+  color: var(--text-secondary);
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.theme-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem;
+  border: 2px solid transparent;
+  border-radius: var(--radius-xl);
+  background: var(--bg-primary);
+  cursor: pointer;
+  transition: var(--transition-base);
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-option:hover {
+  background: var(--bg-secondary);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.theme-option.active {
+  border-color: var(--color-primary);
+  background: var(--bg-secondary); /* or a lighter primary */
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.1);
+}
+
+.theme-preview {
+  width: 100%;
+  aspect-ratio: 16/10;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px var(--border-primary);
+}
+
+.theme-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  color: var(--text-secondary);
+}
+
+.theme-option.active .theme-name {
+  color: var(--color-primary);
+}

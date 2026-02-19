@@ -1,0 +1,227 @@
+.auth-prompt {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.auth-card {
+  text-align: center;
+  max-width: 400px;
+  padding: 3rem 2rem;
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-primary);
+}
+
+.auth-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.auth-card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  color: var(--text-primary);
+}
+
+.auth-card p {
+  color: var(--text-secondary);
+  margin: 0 0 1.5rem;
+}
+
+.dashboard {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--bg-primary);
+  min-height: calc(100vh - 80px);
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 3rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.header-info h1 {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.header-info p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.btn-profile-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-profile-link:hover {
+  border-color: var(--border-secondary);
+  background: var(--bg-secondary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-profile-link .share-icon {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+
+.claim-banner {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-lg);
+  margin-bottom: 1.5rem;
+}
+
+.claim-content h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+}
+
+.claim-content p {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: 1.1fr 1.3fr 340px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .preview-section {
+    grid-column: span 2;
+    display: flex;
+    justify-content: center;
+  }
+}
+
+.section {
+  background: var(--bg-primary);
+  border-radius: 28px;
+  padding: 2.25rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-primary);
+  height: fit-content;
+}
+
+.section h2 {
+  margin: 0 0 2rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  letter-spacing: -0.02em;
+}
+
+.save-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  padding: 1.25rem 2rem;
+  background: var(--bg-header);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: 20px;
+  position: sticky;
+  bottom: 1.5rem;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-primary);
+  z-index: 50;
+}
+
+.btn-save {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.875rem 2.5rem;
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 700;
+  transition: var(--transition-normal);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.btn-save:hover {
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+.btn-save:disabled {
+  background: var(--text-secondary);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-text, .btn-loading {
+  display: none;
+}
+
+.btn-save:not(:disabled) .btn-text {
+  display: inline;
+}
+
+.btn-save:disabled .btn-loading {
+  display: inline;
+}
+
+.save-status {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.save-status.success {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.save-status.error {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.save-status.saving {
+  color: var(--text-secondary);
+}

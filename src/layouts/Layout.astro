@@ -1,5 +1,6 @@
 ---
 import { SignedIn, SignedOut, UserButton, SignInButton } from '@clerk/astro/components'
+import '../styles/main.css'
 
 interface Props {
   title: string
@@ -55,16 +56,22 @@ const siteName = 'C-Link'
 		<meta name="twitter:title" content={title} />
 		<meta name="twitter:description" content={description} />
 		<meta name="twitter:image" content={new URL(image, Astro.site ?? Astro.url.origin).href} />
+		
+		<!-- Color Scheme -->
+		<meta name="color-scheme" content="light dark" />
 	</head>
 	<body>
 		{showHeader && (
-      <header>
-        <div class="header-content">
-          <a href="/" class="logo">C-Link</a>
-          <nav>
+      <header class="header">
+        <div class="header-content container">
+          <a href="/" class="logo">
+            <span class="logo-icon">🔗</span>
+            <span class="logo-text">C-Link</span>
+          </a>
+          <nav class="nav">
             <SignedOut>
               <SignInButton mode="modal">
-                <button class="nav-btn">Sign In</button>
+                <button class="btn btn-primary">Sign In</button>
               </SignInButton>
             </SignedOut>
             <SignedIn>
@@ -80,106 +87,66 @@ const siteName = 'C-Link'
 </html>
 
 <style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-		font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-	}
-
-	/* Material Symbols */
-	.material-symbols-outlined {
-		font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-	}
-
-	header {
-		background: rgba(255, 255, 255, 0.8);
-		backdrop-filter: blur(12px);
-		-webkit-backdrop-filter: blur(12px);
-		border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-		padding: 0.75rem 0;
+	/* Header Styles */
+	.header {
+		background: var(--bg-primary);
+		border-bottom: 1px solid var(--border-primary);
+		padding: var(--spacing-3) 0;
 		position: sticky;
 		top: 0;
-		z-index: 100;
-	}
-
-	.header-content {
-		max-width: 1400px;
-		margin: 0 auto;
-		padding: 0 2rem;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
+		z-index: var(--z-sticky);
+		transition: background-color var(--transition-smooth), border-color var(--transition-smooth);
 	}
 
 	.logo {
-		font-size: 1.5rem;
-		font-weight: 800;
-		color: #111;
-		text-decoration: none;
-		background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-		letter-spacing: -0.02em;
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
+		gap: var(--spacing-2);
+		font-size: var(--font-size-xl);
+		font-weight: var(--font-weight-extrabold);
+		text-decoration: none;
+		letter-spacing: -0.02em;
 	}
 
-	.logo::before {
-		content: '🔗';
-		font-size: 1.25rem;
+	.logo-icon {
+		font-size: var(--font-size-lg);
 		-webkit-text-fill-color: initial;
 	}
 
-	nav {
+	.logo-text {
+		background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+	}
+
+	.nav {
 		display: flex;
 		align-items: center;
-		gap: 1.5rem;
+		gap: var(--spacing-4);
 	}
 
 	.nav-link {
-		color: #4b5563;
+		color: var(--text-secondary);
 		text-decoration: none;
-		font-size: 0.95rem;
-		font-weight: 600;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-		padding: 0.5rem 1rem;
-		border-radius: 10px;
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-semibold);
+		transition: all var(--transition-fast);
+		padding: var(--spacing-2) var(--spacing-4);
+		border-radius: var(--radius-lg);
 	}
 
 	.nav-link:hover {
-		color: #111827;
-		background: #f3f4f6;
+		color: var(--text-primary);
+		background: var(--bg-secondary);
 	}
 
-	.nav-btn {
-		background: #111827;
-		color: white;
-		border: none;
-		padding: 0.625rem 1.25rem;
-		border-radius: 12px;
-		cursor: pointer;
-		font-size: 0.95rem;
-		font-weight: 700;
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	@media (max-width: 640px) {
+		.header-content {
+			padding: 0 var(--spacing-4);
+		}
+		.nav-link {
+			display: none;
+		}
 	}
-
-	.nav-btn:hover {
-		background: #000;
-		transform: translateY(-1px);
-		box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-	}
-
-  @media (max-width: 640px) {
-    .header-content {
-      padding: 0 1rem;
-    }
-    .nav-link {
-      display: none;
-    }
-  }
 </style>

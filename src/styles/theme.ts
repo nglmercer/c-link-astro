@@ -1,6 +1,10 @@
+// ============================================
+// Theme Manager Utility
+// ============================================
+
 import type { ThemeName } from '../types/linktree'
 
-export interface Theme {
+export interface ThemePreset {
   name: string
   background: string
   cardBg: string
@@ -9,15 +13,14 @@ export interface Theme {
   subtext: string
   accent: string
   glass?: boolean
-  buttonBg?: string
-  buttonText?: string
 }
 
-export interface ThemeConfig {
-  [key: string]: Theme
+export interface ThemePresets {
+  [key: string]: ThemePreset
 }
 
-export const themes: ThemeConfig = {
+// Theme presets mapped to CSS custom properties
+export const themePresets: ThemePresets = {
   gradient: {
     name: 'Gradient Pulse',
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -65,7 +68,8 @@ export const themes: ThemeConfig = {
     cardBorder: 'rgba(51, 65, 85, 0.5)',
     text: '#f8fafc',
     subtext: '#94a3b8',
-    accent: '#38bdf8'
+    accent: '#38bdf8',
+    glass: false
   },
   light: {
     name: 'Snowfall',
@@ -74,7 +78,8 @@ export const themes: ThemeConfig = {
     cardBorder: '#e2e8f0',
     text: '#0f172a',
     subtext: '#64748b',
-    accent: '#2563eb'
+    accent: '#2563eb',
+    glass: false
   },
   cyberpunk: {
     name: 'Neon Night',
@@ -83,7 +88,8 @@ export const themes: ThemeConfig = {
     cardBorder: '#f472b6',
     text: '#fdf2f8',
     subtext: '#f472b6',
-    accent: '#f472b6'
+    accent: '#f472b6',
+    glass: false
   },
   midnight: {
     name: 'Midnight Bloom',
@@ -102,7 +108,8 @@ export const themes: ThemeConfig = {
     cardBorder: '#fbcfe8',
     text: '#831843',
     subtext: '#be185d',
-    accent: '#db2777'
+    accent: '#db2777',
+    glass: false
   },
   emerald: {
     name: 'Royal Emerald',
@@ -119,8 +126,64 @@ export const themes: ThemeConfig = {
 export const DEFAULT_THEME: ThemeName = 'gradient'
 
 /**
- * Get theme by name
+ * Get theme preset by name
  */
-export function getTheme(themeName: ThemeName = DEFAULT_THEME): Theme {
-  return themes[themeName] || themes[DEFAULT_THEME]
+export function getThemePreset(themeName: ThemeName = DEFAULT_THEME): ThemePreset {
+  return themePresets[themeName] || themePresets[DEFAULT_THEME]
+}
+
+/**
+ * Get all available theme names
+ */
+export function getThemeNames(): ThemeName[] {
+  return Object.keys(themePresets) as ThemeName[]
+}
+
+/**
+ * Apply theme to a DOM element
+ */
+export function applyThemeToElement(
+  element: HTMLElement,
+  themeName: ThemeName
+): void {
+  const preset = getThemePreset(themeName)
+  
+  element.style.setProperty('--theme-bg', preset.background)
+  element.style.setProperty('--theme-card-bg', preset.cardBg)
+  element.style.setProperty('--theme-card-border', preset.cardBorder)
+  element.style.setProperty('--theme-text', preset.text)
+  element.style.setProperty('--theme-subtext', preset.subtext)
+  element.style.setProperty('--theme-accent', preset.accent)
+  element.style.setProperty('--theme-glass', preset.glass ? 'blur(16px)' : 'none')
+  
+  // Add data attribute for CSS selectors
+  element.setAttribute('data-theme-preset', themeName)
+}
+
+/**
+ * Apply theme using data attribute (preferred method)
+ */
+export function applyThemeAttribute(
+  container: HTMLElement | Document,
+  themeName: ThemeName
+): void {
+  container.setAttribute('data-theme-preset', themeName)
+}
+
+/**
+ * Get CSS variables as inline styles for a theme
+ */
+export function getThemeInlineStyles(themeName: ThemeName): string {
+  const preset = getThemePreset(themeName)
+  const glassValue = preset.glass ? 'blur(16px)' : 'none'
+  
+  return `
+    --theme-bg: ${preset.background};
+    --theme-card-bg: ${preset.cardBg};
+    --theme-card-border: ${preset.cardBorder};
+    --theme-text: ${preset.text};
+    --theme-subtext: ${preset.subtext};
+    --theme-accent: ${preset.accent};
+    --theme-glass: ${glassValue};
+  `.trim()
 }
