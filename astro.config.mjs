@@ -6,4 +6,5 @@ export default defineConfig({
   integrations: [clerk()],
   adapter: node({ mode: 'standalone' }),
   output: 'server',
+  site: 'https://c-link.app', // Change this to your actual domain
 })

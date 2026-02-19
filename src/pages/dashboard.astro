@@ -4,6 +4,7 @@ import { SignedIn, SignedOut, SignInButton } from '@clerk/astro/components'
 import { clerkClient } from '@clerk/astro/server'
 import ProfileForm from '../components/ProfileForm.astro'
 import LinkEditor from '../components/LinkEditor.astro'
+import ProfilePreview from '../components/ProfilePreview.astro'
 import type { UserProfile } from '../types/linktree'
 
 // Get user ID from Clerk auth via locals
@@ -82,6 +83,15 @@ const hasClaimedUsername = !!profile?.username
         <div class="section links-section">
           <LinkEditor links={initialLinks} />
         </div>
+
+        <div class="section preview-section">
+          <ProfilePreview 
+            username={username}
+            displayName={profile?.displayName}
+            bio={profile?.bio}
+            links={initialLinks}
+          />
+        </div>
       </div>
 
       <div class="save-bar">
@@ -95,135 +105,139 @@ const hasClaimedUsername = !!profile?.username
   </SignedIn>
 </Layout>
 
-<script define:vars={{ hasClaimedUsername }}>
-  let currentUsername = hasClaimedUsername ? '' : null
-  
-  // Username availability check
-  let isCheckingUsername = false
-  let checkTimeout = null
+<script>
+  // Import store from lib - this will be bundled with the page
+  import { saveProfile, checkUsername, updateLinks } from '../lib/store';
 
-  const usernameInput = document.getElementById('username')
-  const usernameStatus = document.getElementById('username-status')
-  const saveBtn = document.getElementById('save-btn')
-  const saveStatus = document.getElementById('save-status')
+  // State
+  let isCheckingUsername = false;
+  let checkTimeout = null;
+  let currentLinks = [];
 
-  // Check username
-  async function checkUsername(username) {
-    if (!username || username.length < 3) return
+  // Elements
+  const usernameInput = document.getElementById('username') as HTMLInputElement;
+  const usernameStatus = document.getElementById('username-status');
+  const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
+  const saveStatus = document.getElementById('save-status');
+
+  // Check username availability
+  async function checkUsernameAvailability(username) {
+    if (!username || username.length < 3) return;
     
-    if (checkTimeout) clearTimeout(checkTimeout)
+    if (checkTimeout) clearTimeout(checkTimeout);
     
     checkTimeout = setTimeout(async () => {
-      if (isCheckingUsername) return
+      if (isCheckingUsername) return;
       
-      isCheckingUsername = true
+      isCheckingUsername = true;
       if (usernameStatus) {
-        usernameStatus.textContent = 'Checking...'
-        usernameStatus.className = 'username-status checking'
+        usernameStatus.textContent = 'Checking...';
+        usernameStatus.className = 'username-status checking';
       }
       
       try {
-        const response = await fetch(`/api/profile/check?username=${encodeURIComponent(username)}`)
-        const data = await response.json()
+        const result = await checkUsername(username);
         
-        if (data.available) {
+        if (result.available) {
           if (usernameStatus) {
-            usernameStatus.textContent = '✓ Username is available!'
-            usernameStatus.className = 'username-status available'
+            usernameStatus.textContent = '✓ Username is available!';
+            usernameStatus.className = 'username-status available';
           }
         } else {
           if (usernameStatus) {
-            usernameStatus.textContent = '✗ ' + (data.reason || 'Username is taken')
-            usernameStatus.className = 'username-status taken'
+            usernameStatus.textContent = '✗ ' + (result.reason || 'Username is taken');
+            usernameStatus.className = 'username-status taken';
           }
         }
       } catch (error) {
-        console.error('Error checking username:', error)
+        console.error('Error checking username:', error);
       } finally {
-        isCheckingUsername = false
+        isCheckingUsername = false;
       }
-    }, 500)
+    }, 500);
   }
 
   // Username input handler
   if (usernameInput) {
-    usernameInput.addEventListener('input', (e) => {
-      const value = e.target.value.trim()
+    usernameInput.addEventListener('input', (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const value = target.value.trim();
       if (value.length >= 3) {
-        checkUsername(value)
+        checkUsernameAvailability(value);
       } else if (usernameStatus) {
-        usernameStatus.textContent = ''
-        usernameStatus.className = 'username-status'
+        usernameStatus.textContent = '';
+        usernameStatus.className = 'username-status';
       }
-    })
+    });
   }
 
   // Save to Clerk
   async function saveToClerk() {
     try {
-      if (saveBtn) saveBtn.disabled = true
+      if (saveBtn) saveBtn.disabled = true;
       if (saveStatus) {
-        saveStatus.textContent = 'Saving...'
-        saveStatus.className = 'save-status saving'
+        saveStatus.textContent = 'Saving...';
+        saveStatus.className = 'save-status saving';
       }
       
-      const usernameVal = usernameInput?.value?.trim() || ''
-      const displayNameInput = document.getElementById('displayName')
-      const bioInput = document.getElementById('bio')
+      const usernameVal = usernameInput?.value?.trim() || '';
+      const displayNameInput = document.getElementById('displayName') as HTMLInputElement;
+      const bioInput = document.getElementById('bio') as HTMLTextAreaElement;
       
-      const response = await fetch('/api/profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: usernameVal,
-          displayName: displayNameInput?.value?.trim() || '',
-          bio: bioInput?.value?.trim() || ''
-        })
-      })
+      const result = await saveProfile({
+        username: usernameVal,
+        displayName: displayNameInput?.value?.trim() || '',
+        bio: bioInput?.value?.trim() || '',
+        links: currentLinks
+      });
       
-      const data = await response.json()
-      
-      if (data.success) {
-        currentUsername = data.profile.username
-        
+      if (result) {
         if (saveStatus) {
-          saveStatus.textContent = 'Saved!'
-          saveStatus.className = 'save-status success'
+          saveStatus.textContent = 'Saved!';
+          saveStatus.className = 'save-status success';
         }
         
         // Update preview link
-        const previewLink = document.querySelector('.btn-view')
-        if (previewLink && currentUsername) {
-          previewLink.setAttribute('href', `/${currentUsername}`)
+        const previewLink = document.querySelector('.btn-view') as HTMLAnchorElement;
+        if (previewLink && result.username) {
+          previewLink.href = `/${result.username}`;
         }
         
         // Hide claim banner
-        const banner = document.querySelector('.claim-banner')
-        if (banner && currentUsername) {
-          banner.style.display = 'none'
+        const banner = document.querySelector('.claim-banner');
+        if (banner && result.username) {
+          banner.style.display = 'none';
         }
       } else {
-        throw new Error(data.error || 'Failed to save')
+        throw new Error('Failed to save');
       }
     } catch (error) {
-      console.error('Error saving:', error)
+      console.error('Error saving:', error);
       if (saveStatus) {
-        saveStatus.textContent = 'Error saving'
-        saveStatus.className = 'save-status error'
+        saveStatus.textContent = 'Error saving';
+        saveStatus.className = 'save-status error';
       }
     } finally {
-      if (saveBtn) saveBtn.disabled = false
+      if (saveBtn) saveBtn.disabled = false;
       setTimeout(() => {
         if (saveStatus) {
-          saveStatus.textContent = ''
-          saveStatus.className = 'save-status'
+          saveStatus.textContent = '';
+          saveStatus.className = 'save-status';
         }
-      }, 3000)
+      }, 3000);
     }
   }
 
+  // Expose saveToClerk globally for LinkEditor component
+  (window as unknown as { saveToClerkFromEditor: typeof saveToClerk }).saveToClerkFromEditor = saveToClerk;
+
+  // Listen for links updates from LinkEditor
+  document.addEventListener('links-updated', (e: CustomEvent) => {
+    currentLinks = e.detail;
+  });
+
   // Save button
-  document.getElementById('save-btn')?.addEventListener('click', saveToClerk)
+  document.getElementById('save-btn')?.addEventListener('click', saveToClerk);
 </script>
 
 <style>
@@ -276,7 +290,7 @@ const hasClaimedUsername = !!profile?.username
   }
 
   .dashboard {
-    max-width: 1000px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 2rem;
   }
@@ -339,9 +353,19 @@ const hasClaimedUsername = !!profile?.username
     gap: 1.5rem;
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 1024px) {
+    .dashboard-grid {
+      grid-template-columns: 1fr 1fr 320px;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
     .dashboard-grid {
       grid-template-columns: 1fr 1fr;
+    }
+    
+    .preview-section {
+      grid-column: span 2;
     }
   }
 

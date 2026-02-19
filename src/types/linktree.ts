@@ -7,13 +7,15 @@ export interface Link {
   isActive: boolean
 }
 
+export type ThemeName = 'light' | 'dark' | 'gradient' | 'ocean' | 'sunset' | 'forest'
+
 export interface UserProfile {
   id: string
   username: string
   displayName: string
   bio?: string
   avatarUrl?: string
-  theme: 'light' | 'dark' | 'gradient'
+  theme: ThemeName
   links: Link[]
 }
 
@@ -28,5 +30,5 @@ export interface ProfileInput {
   displayName?: string
   bio?: string
   avatarUrl?: string
-  theme?: 'light' | 'dark' | 'gradient'
+  theme?: ThemeName
 }

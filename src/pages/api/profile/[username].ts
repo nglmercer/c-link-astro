@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro'
 import { clerkClient } from '@clerk/astro/server'
+import { findUserByUsername, DEFAULT_THEME } from '../../../lib/profile'
 import type { UserProfile } from '../../../types/linktree'
 
 export const POST: APIRoute = async (context) => {
@@ -28,7 +29,7 @@ export const POST: APIRoute = async (context) => {
       username: username || currentMetadata?.profile?.username || auth.userId.slice(0, 12),
       displayName: displayName || currentMetadata?.profile?.displayName || auth.userId.slice(0, 8),
       bio: bio || currentMetadata?.profile?.bio || '',
-      theme: theme || currentMetadata?.profile?.theme || 'gradient',
+      theme: theme || currentMetadata?.profile?.theme || DEFAULT_THEME,
       links: links || currentMetadata?.profile?.links || []
     }
 
@@ -68,34 +69,21 @@ export const GET: APIRoute = async (context) => {
 
   try {
     const clerk = clerkClient(context)
-    
-    // Get users list - Clerk returns { data: [...], totalCount: n }
-    const usersResponse = await clerk.users.getUserList({ limit: 100 })
-    
-    // Handle both array and object response formats
-    const usersArray = Array.isArray(usersResponse) 
-      ? usersResponse 
-      : (usersResponse.data || [])
-    
-    const userWithUsername = usersArray.find((user: any) => {
-      const metadata = user.publicMetadata as Record<string, any>
-      return metadata?.profile?.username === username
-    })
+    const result = await findUserByUsername(clerk, username)
 
-    if (!userWithUsername) {
+    if (!result) {
       return new Response(JSON.stringify({ error: 'User not found' }), {
         status: 404,
         headers: { 'Content-Type': 'application/json' }
       })
     }
 
-    const metadata = userWithUsername.publicMetadata as Record<string, any>
-    const profile = metadata?.profile as UserProfile || {
-      id: userWithUsername.id,
+    const profile: UserProfile = result.profile || {
+      id: result.user.id,
       username,
       displayName: username,
       bio: '',
-      theme: 'gradient',
+      theme: DEFAULT_THEME,
       links: []
     }
 

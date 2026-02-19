@@ -1,111 +1,261 @@
-import type { Link, UserProfile, LinkInput, ProfileInput } from '../types/linktree'
+// Global state store with TypeScript support
+// This store uses CustomEvents to communicate between components
 
-// In-memory store - replace with database in production
-const profiles: Map<string, UserProfile> = new Map()
-
-function generateId(): string {
-  return Math.random().toString(36).substring(2, 15)
+export interface Link {
+  id: string
+  title: string
+  url: string
+  icon?: string
+  order: number
+  isActive: boolean
 }
 
-export function getUserProfile(userId: string): UserProfile | undefined {
-  return profiles.get(userId)
+export interface UserProfile {
+  id: string
+  username: string
+  displayName: string
+  bio?: string
+  avatarUrl?: string
+  theme: 'light' | 'dark' | 'gradient' | 'ocean' | 'sunset' | 'forest'
+  links: Link[]
 }
 
-export function getUserProfileByUsername(username: string): UserProfile | undefined {
-  for (const profile of profiles.values()) {
-    if (profile.username === username) {
-      return profile
+export interface AppState {
+  profile: UserProfile | null
+  isLoading: boolean
+  isSaving: boolean
+  error: string | null
+}
+
+// Store events
+export const STORE_EVENTS = {
+  STATE_CHANGED: 'store:stateChanged',
+  PROFILE_UPDATED: 'store:profileUpdated',
+  LINKS_UPDATED: 'store:linksUpdated',
+  SAVING_STARTED: 'store:savingStarted',
+  SAVING_COMPLETED: 'store:savingCompleted',
+  SAVING_ERROR: 'store:savingError',
+} as const
+
+// Initial state
+const initialState: AppState = {
+  profile: null,
+  isLoading: false,
+  isSaving: false,
+  error: null,
+}
+
+// Current state
+let state: AppState = { ...initialState }
+
+// Event target for dispatching events
+const eventTarget = new EventTarget()
+
+// Get current state
+export function getState(): AppState {
+  return { ...state }
+}
+
+// Update state
+function setState(partial: Partial<AppState>): void {
+  state = { ...state, ...partial }
+  eventTarget.dispatchEvent(new CustomEvent(STORE_EVENTS.STATE_CHANGED, { 
+    detail: state 
+  }))
+}
+
+// Profile actions
+export function setProfile(profile: UserProfile | null): void {
+  setState({ profile, error: null })
+}
+
+export function updateProfile(updates: Partial<UserProfile>): void {
+  if (state.profile) {
+    const updated = { ...state.profile, ...updates }
+    setState({ profile: updated })
+    eventTarget.dispatchEvent(new CustomEvent(STORE_EVENTS.PROFILE_UPDATED, { 
+      detail: updated 
+    }))
+  }
+}
+
+export function updateLinks(links: Link[]): void {
+  if (state.profile) {
+    const updated = { ...state.profile, links }
+    setState({ profile: updated })
+    eventTarget.dispatchEvent(new CustomEvent(STORE_EVENTS.LINKS_UPDATED, { 
+      detail: links 
+    }))
+  }
+}
+
+// Loading states
+export function setLoading(isLoading: boolean): void {
+  setState({ isLoading })
+}
+
+export function setSaving(isSaving: boolean): void {
+  setState({ isSaving })
+  if (isSaving) {
+    eventTarget.dispatchEvent(new CustomEvent(STORE_EVENTS.SAVING_STARTED))
+  } else {
+    eventTarget.dispatchEvent(new CustomEvent(STORE_EVENTS.SAVING_COMPLETED))
+  }
+}
+
+export function setError(error: string | null): void {
+  setState({ error })
+  if (error) {
+    eventTarget.dispatchEvent(new CustomEvent(STORE_EVENTS.SAVING_ERROR, { 
+      detail: error 
+    }))
+  }
+}
+
+// Subscribe to state changes
+export function subscribe(callback: (state: AppState) => void): () => void {
+  const handler = (e: Event) => {
+    const customEvent = e as CustomEvent<AppState>
+    callback(customEvent.detail)
+  }
+  
+  eventTarget.addEventListener(STORE_EVENTS.STATE_CHANGED, handler)
+  
+  // Return unsubscribe function
+  return () => {
+    eventTarget.removeEventListener(STORE_EVENTS.STATE_CHANGED, handler)
+  }
+}
+
+// Subscribe to profile updates
+export function onProfileUpdated(callback: (profile: UserProfile) => void): () => void {
+  const handler = (e: Event) => {
+    const customEvent = e as CustomEvent<UserProfile>
+    callback(customEvent.detail)
+  }
+  
+  eventTarget.addEventListener(STORE_EVENTS.PROFILE_UPDATED, handler)
+  
+  return () => {
+    eventTarget.removeEventListener(STORE_EVENTS.PROFILE_UPDATED, handler)
+  }
+}
+
+// Subscribe to links updates
+export function onLinksUpdated(callback: (links: Link[]) => void): () => void {
+  const handler = (e: Event) => {
+    const customEvent = e as CustomEvent<Link[]>
+    callback(customEvent.detail)
+  }
+  
+  eventTarget.addEventListener(STORE_EVENTS.LINKS_UPDATED, handler)
+  
+  return () => {
+    eventTarget.removeEventListener(STORE_EVENTS.LINKS_UPDATED, handler)
+  }
+}
+
+// Subscribe to saving events
+export function onSavingStarted(callback: () => void): () => void {
+  const handler = () => callback()
+  eventTarget.addEventListener(STORE_EVENTS.SAVING_STARTED, handler)
+  return () => eventTarget.removeEventListener(STORE_EVENTS.SAVING_STARTED, handler)
+}
+
+export function onSavingCompleted(callback: () => void): () => void {
+  const handler = () => callback()
+  eventTarget.addEventListener(STORE_EVENTS.SAVING_COMPLETED, handler)
+  return () => eventTarget.removeEventListener(STORE_EVENTS.SAVING_COMPLETED, handler)
+}
+
+export function onSavingError(callback: (error: string) => void): () => void {
+  const handler = (e: Event) => {
+    const customEvent = e as CustomEvent<string>
+    callback(customEvent.detail)
+  }
+  eventTarget.addEventListener(STORE_EVENTS.SAVING_ERROR, handler)
+  return () => eventTarget.removeEventListener(STORE_EVENTS.SAVING_ERROR, handler)
+}
+
+// API functions
+export async function loadProfile(username: string): Promise<UserProfile | null> {
+  setLoading(true)
+  setError(null)
+  
+  try {
+    const response = await fetch(`/api/profile/${username}`)
+    
+    if (!response.ok) {
+      throw new Error('Profile not found')
     }
-  }
-  return undefined
-}
-
-export function createProfile(userId: string, username: string): UserProfile {
-  const profile: UserProfile = {
-    id: userId,
-    username,
-    displayName: username,
-    bio: '',
-    theme: 'gradient',
-    links: [],
-  }
-  profiles.set(userId, profile)
-  return profile
-}
-
-export function updateProfile(userId: string, input: ProfileInput): UserProfile | undefined {
-  const profile = profiles.get(userId)
-  if (!profile) return undefined
-
-  if (input.displayName !== undefined) profile.displayName = input.displayName
-  if (input.bio !== undefined) profile.bio = input.bio
-  if (input.avatarUrl !== undefined) profile.avatarUrl = input.avatarUrl
-  if (input.theme !== undefined) profile.theme = input.theme
-
-  return profile
-}
-
-export function addLink(userId: string, input: LinkInput): Link | undefined {
-  const profile = profiles.get(userId)
-  if (!profile) return undefined
-
-  const link: Link = {
-    id: generateId(),
-    title: input.title,
-    url: input.url,
-    icon: input.icon,
-    order: profile.links.length,
-    isActive: input.isActive ?? true,
-  }
-  profile.links.push(link)
-  return link
-}
-
-export function updateLink(userId: string, linkId: string, input: Partial<LinkInput>): Link | undefined {
-  const profile = profiles.get(userId)
-  if (!profile) return undefined
-
-  const link = profile.links.find((l) => l.id === linkId)
-  if (!link) return undefined
-
-  if (input.title !== undefined) link.title = input.title
-  if (input.url !== undefined) link.url = input.url
-  if (input.icon !== undefined) link.icon = input.icon
-  if (input.isActive !== undefined) link.isActive = input.isActive
-
-  return link
-}
-
-export function deleteLink(userId: string, linkId: string): boolean {
-  const profile = profiles.get(userId)
-  if (!profile) return false
-
-  const index = profile.links.findIndex((l) => l.id === linkId)
-  if (index === -1) return false
-
-  profile.links.splice(index, 1)
-  
-  // Reorder remaining links
-  profile.links.forEach((link, i) => {
-    link.order = i
-  })
-  
-  return true
-}
-
-export function reorderLinks(userId: string, linkIds: string[]): boolean {
-  const profile = profiles.get(userId)
-  if (!profile) return false
-
-  const linkMap = new Map(profile.links.map((l) => [l.id, l]))
-  
-  linkIds.forEach((id, index) => {
-    const link = linkMap.get(id)
-    if (link) {
-      link.order = index
+    
+    const data = await response.json()
+    
+    if (!data.profile) {
+      throw new Error('Profile not found')
     }
-  })
+    
+    setProfile(data.profile)
+    return data.profile
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to load profile'
+    setError(errorMessage)
+    return null
+  } finally {
+    setLoading(false)
+  }
+}
 
-  profile.links.sort((a, b) => a.order - b.order)
-  return true
+export async function saveProfile(data: {
+  username?: string
+  displayName?: string
+  bio?: string
+  theme?: string
+  links?: Link[]
+}): Promise<UserProfile | null> {
+  setSaving(true)
+  setError(null)
+  
+  try {
+    const response = await fetch('/api/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'Failed to save profile')
+    }
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      setProfile(result.profile)
+      return result.profile
+    } else {
+      throw new Error(result.error || 'Failed to save profile')
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to save profile'
+    setError(errorMessage)
+    return null
+  } finally {
+    setSaving(false)
+  }
+}
+
+export async function checkUsername(username: string): Promise<{ available: boolean; reason?: string }> {
+  try {
+    const response = await fetch(`/api/profile/check?username=${encodeURIComponent(username)}`)
+    return await response.json()
+  } catch {
+    return { available: false, reason: 'Failed to check username' }
+  }
+}
+
+// Reset state
+export function resetState(): void {
+  state = { ...initialState }
+  setState(initialState)
 }
