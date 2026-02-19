@@ -7,7 +7,7 @@ import LinkEditor from '../components/LinkEditor.astro'
 import ProfilePreview from '../components/ProfilePreview.astro'
 import type { UserProfile } from '../types/linktree'
 
-import { findUserById } from '../lib/profile'
+import { findUserById } from '../lib/profile.server'
 
 // Get user ID from Clerk auth via locals
 const clerkAuth = Astro.locals.auth()

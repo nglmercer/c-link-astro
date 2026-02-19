@@ -8,6 +8,7 @@ interface Props {
   url?: string
   type?: string
   twitterCard?: 'summary' | 'summary_large_image'
+  showHeader?: boolean
 }
 
 const { 
@@ -16,7 +17,8 @@ const {
   image = '/hero.png',
   url = Astro.url.href,
   type = 'website',
-  twitterCard = 'summary_large_image'
+  twitterCard = 'summary_large_image',
+  showHeader = true
 } = Astro.props
 
 const siteName = 'C-Link'
@@ -55,22 +57,24 @@ const siteName = 'C-Link'
 		<meta name="twitter:image" content={new URL(image, Astro.site ?? Astro.url.origin).href} />
 	</head>
 	<body>
-		<header>
-      <div class="header-content">
-        <a href="/" class="logo">C-Link</a>
-        <nav>
-          <SignedOut>
-            <SignInButton mode="modal">
-              <button class="nav-btn">Sign In</button>
-            </SignInButton>
-          </SignedOut>
-          <SignedIn>
-            <a href="/dashboard" class="nav-link">Dashboard</a>
-            <UserButton />
-          </SignedIn>
-        </nav>
-      </div>
-    </header>
+		{showHeader && (
+      <header>
+        <div class="header-content">
+          <a href="/" class="logo">C-Link</a>
+          <nav>
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button class="nav-btn">Sign In</button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <a href="/dashboard" class="nav-link">Dashboard</a>
+              <UserButton />
+            </SignedIn>
+          </nav>
+        </div>
+      </header>
+    )}
 		<slot />
 	</body>
 </html>

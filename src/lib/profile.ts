@@ -1,5 +1,3 @@
-import { db, User, Link as LinkTable, eq } from 'astro:db'
-import type { AstroGlobal } from 'astro'
 import type { UserProfile, Link as LinkType, ThemeName } from '../types/linktree'
 
 // Re-export types for convenience
@@ -203,12 +201,11 @@ export function isValidUrl(url: string): boolean {
 }
 
 /**
- * Escape HTML to prevent XSS
+ * Formats a display name or username into a safe string
  */
-export function escapeHtml(text: string): string {
-  const div = document.createElement('div')
-  div.textContent = text
-  return div.innerHTML
+export function formatDisplayName(profile: UserProfile): string {
+  const username = profile.username || 'user'
+  return profile.displayName || `@${username}`
 }
 
 /**
@@ -235,85 +232,62 @@ export function truncate(text: string, maxLength: number): string {
   return text.slice(0, maxLength - 3) + '...'
 }
 
-// ============================================
-// Render Functions
-// ============================================
-
 /**
- * Generate HTML for a link card
+ * Display links using a template
  */
-export function renderLinkCard(link: LinkType, index: number): string {
-  const platform = getPlatformIcon(link.url)
-  const domain = getDomain(link.url)
+export function displayLinks(container: HTMLElement, links: LinkType[], themeName: ThemeName = DEFAULT_THEME): void {
+  const template = document.getElementById('link-template') as HTMLTemplateElement
+  const emptyTemplate = document.getElementById('empty-links-template') as HTMLTemplateElement
   
-  return `
-    <li class="link-item" style="animation-delay: ${index * 0.08}s">
-      <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="link-card">
-        <div class="link-icon" style="background: ${platform.color}15; color: ${platform.color}">
-          <span class="material-symbols-outlined">${platform.icon}</span>
-        </div>
-        <div class="link-content">
-          <span class="link-title">${escapeHtml(link.title)}</span>
-          <span class="link-url">${escapeHtml(domain)}</span>
-        </div>
-        <span class="material-symbols-outlined link-arrow">open_in_new</span>
-      </a>
-    </li>
-  `
-}
-
-/**
- * Generate HTML for empty links state
- */
-export function renderEmptyLinks(): string {
-  return `
-    <li class="empty-link">
-      <span class="material-symbols-outlined">link_off</span>
-      <span>No links yet</span>
-    </li>
-  `
-}
-
-/**
- * Generate HTML for not found state
- */
-export function renderNotFound(username: string): string {
-  return `
-    <div class="not-found-content">
-      <div class="not-found-icon">
-        <span class="material-symbols-outlined">link_off</span>
-      </div>
-      <h2>Page not found</h2>
-      <p>This link tree doesn't exist or hasn't been claimed yet.</p>
-      <a href="/dashboard" class="cta-button">
-        <span class="material-symbols-outlined">add</span>
-        Create your own
-      </a>
-    </div>
-  `
-}
-
-/**
- * Generate HTML for loading state
- */
-export function renderLoading(): string {
-  return `
-    <div class="loading">
-      <div class="spinner"></div>
-      <span>Loading profile...</span>
-    </div>
-  `
-}
-
-/**
- * Generate all links HTML
- */
-export function renderLinks(links: LinkType[]): string {
-  if (links.length === 0) {
-    return renderEmptyLinks()
+  // Clear container safely
+  container.textContent = ''
+  
+  if (!links || links.length === 0) {
+    if (emptyTemplate) {
+      container.appendChild(emptyTemplate.content.cloneNode(true))
+    }
+    return
   }
   
-  return links.map((link, index) => renderLinkCard(link, index)).join('')
+  const theme = getTheme(themeName)
+  const fragment = document.createDocumentFragment()
+  
+  links.forEach((link, index) => {
+    if (!template) return
+    
+    const clone = template.content.cloneNode(true) as DocumentFragment
+    const item = clone.querySelector('.link-item') as HTMLElement
+    const card = clone.querySelector('.link-card') as HTMLAnchorElement
+    const iconWrapper = clone.querySelector('.link-icon') as HTMLElement
+    const icon = clone.querySelector('.link-icon .material-symbols-outlined') as HTMLElement
+    const title = clone.querySelector('.link-title') as HTMLElement
+    const urlDisplay = clone.querySelector('.link-url') as HTMLElement
+    const arrow = clone.querySelector('.link-arrow') as HTMLElement
+    
+    const platform = getPlatformIcon(link.url)
+    const domain = getDomain(link.url)
+    
+    // Set content and styles
+    item.style.animationDelay = `${index * 0.1}s`
+    
+    card.href = link.url
+    card.style.background = theme.cardBg
+    card.style.color = theme.text
+    
+    iconWrapper.style.background = `${platform.color}15`
+    iconWrapper.style.color = platform.color
+    icon.textContent = platform.icon
+    
+    title.textContent = link.title
+    urlDisplay.textContent = domain
+    urlDisplay.style.color = theme.subtext
+    
+    arrow.style.color = theme.subtext
+    
+    fragment.appendChild(clone)
+  })
+  
+  container.appendChild(fragment)
 }
 
 // ============================================
@@ -338,13 +312,22 @@ export function applyTheme(themeName: ThemeName = DEFAULT_THEME): void {
     card.style.color = theme.text
   })
   
+  // Apply to other elements
+  document.querySelectorAll<HTMLElement>('.link-url').forEach(url => {
+    url.style.color = theme.subtext
+  })
+  
+  document.querySelectorAll<HTMLElement>('.link-arrow').forEach(arrow => {
+    arrow.style.color = theme.subtext
+  })
+  
   const title = document.getElementById('display-name')
-  const handle = document.querySelector('.username-handle')
+  const handle = document.querySelector('.username-handle') as HTMLElement
   const bio = document.getElementById('bio')
   
-  if (title) (title as HTMLElement).style.color = theme.text
-  if (handle) (handle as HTMLElement).style.color = theme.subtext
-  if (bio) (bio as HTMLElement).style.color = theme.subtext
+  if (title) title.style.color = theme.text
+  if (handle) handle.style.color = theme.subtext
+  if (bio) bio.style.color = theme.subtext
 }
 
 /**
@@ -413,20 +396,23 @@ export function displayProfile(profile: UserProfile): void {
   const loading = document.getElementById('loading')
   const notFound = document.getElementById('not-found')
   const container = document.getElementById('links-list')
+  const themeName = (profile.theme as ThemeName) || DEFAULT_THEME
   
   if (loading) loading.style.display = 'none'
   if (notFound) notFound.style.display = 'none'
+  
   if (container) {
     container.style.display = 'flex'
-    container.innerHTML = renderLinks(profile.links || [])
+    displayLinks(container, profile.links || [], themeName)
   }
   
   // Update profile info
   updateProfileDisplay(profile)
   
   // Apply theme
-  applyTheme(profile.theme || DEFAULT_THEME)
+  applyTheme(themeName)
 }
+
 
 // ============================================
 // Server-side Functions (for SSR/SEO)
@@ -448,115 +434,6 @@ export function isReservedRoute(username: string): boolean {
  * Find a user by username in Clerk's user list
  */
 /**
- * Find a user by ID in Astro DB
- */
-export async function findUserById(id: string): Promise<UserProfile | null> {
-  try {
-    const users = await db.select().from(User).where(eq(User.id, id)).limit(1)
-    
-    if (users.length === 0) return null
-    
-    const userData = users[0]
-    const linksData = await db.select().from(LinkTable).where(eq(LinkTable.userId, userData.id))
-    
-    return {
-      id: userData.id,
-      username: userData.username,
-      displayName: userData.displayName,
-      bio: userData.bio || '',
-      theme: userData.theme as any,
-      links: linksData.map(l => ({
-        id: l.id,
-        title: l.title,
-        url: l.url,
-        order: l.order,
-        isActive: l.isActive
-      }))
-    }
-  } catch (error) {
-    console.error('Error finding user by ID in DB:', error)
-    return null
-  }
-}
-
-/**
- * Find a user by username in Astro DB
- */
-export async function findUserByUsername(username: string): Promise<UserProfile | null> {
-  try {
-    const users = await db.select().from(User).where(eq(User.username, username)).limit(1)
-    
-    if (users.length === 0) return null
-    
-    const userData = users[0]
-    const linksData = await db.select().from(LinkTable).where(eq(LinkTable.userId, userData.id))
-    
-    return {
-      id: userData.id,
-      username: userData.username,
-      displayName: userData.displayName,
-      bio: userData.bio || '',
-      theme: userData.theme as any,
-      links: linksData.map(l => ({
-        id: l.id,
-        title: l.title,
-        url: l.url,
-        order: l.order,
-        isActive: l.isActive
-      }))
-    }
-  } catch (error) {
-    console.error('Error finding user by username in DB:', error)
-    return null
-  }
-}
-
-/**
- * Get profile data for SEO/social previews (server-side)
- */
-/**
- * Get profile data for SEO/social previews (server-side)
- */
-export async function getProfileForSEO(Astro: AstroGlobal, username: string): Promise<{
-  profile: UserProfile | null;
-  seoTitle: string;
-  seoDescription: string;
-}> {
-  const defaultTitle = `${username} | C-Link`
-  const defaultDescription = `Check out ${username}'s links on C-Link`
-  
-  try {
-    const profile = await findUserByUsername(username)
-    
-    if (!profile) {
-      return {
-        profile: null,
-        seoTitle: defaultTitle,
-        seoDescription: defaultDescription
-      }
-    }
-    
-    const bioPart = profile.bio ? ` - ${profile.bio}` : ''
-    const linksCount = profile.links?.length || 0
-    
-    return {
-      profile,
-      seoTitle: profile.displayName 
-        ? `${profile.displayName} (@${username}) | C-Link` 
-        : defaultTitle,
-      seoDescription: `${profile.displayName || username}${bioPart} | ${linksCount} links on C-Link`
-    }
-  } catch (error) {
-    console.error('Error fetching profile for SEO:', error)
-    return {
-      profile: null,
-      seoTitle: defaultTitle,
-      seoDescription: defaultDescription
-    }
-  }
-}
-
-/**
  * Build profile description for SEO
  */
 export function buildProfileDescription(profile: UserProfile, username: string): string {
@@ -564,3 +441,4 @@ export function buildProfileDescription(profile: UserProfile, username: string):
   const linksCount = profile.links?.length || 0
   return `${profile.displayName || username}${bioPart} | ${linksCount} links on C-Link`
 }
+
