@@ -6,6 +6,7 @@ const User = defineTable({
     username: column.text({ unique: true }),
     displayName: column.text(),
     bio: column.text({ optional: true }),
+    avatarUrl: column.text({ optional: true }),
     theme: column.text({ default: 'gradient' }),
     updatedAt: column.date({ default: new Date() }),
   }

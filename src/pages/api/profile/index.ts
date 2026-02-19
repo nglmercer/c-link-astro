@@ -14,7 +14,7 @@ export const POST: APIRoute = async (context) => {
 
   try {
     const body = await context.request.json()
-    const { username, displayName, bio, links, theme } = body
+    const { username, displayName, bio, avatarUrl, links, theme } = body
 
     // 1. Upsert the User profile
     await db.insert(User).values({
@@ -22,6 +22,7 @@ export const POST: APIRoute = async (context) => {
       username: username || auth.userId.slice(0, 12),
       displayName: displayName || 'User',
       bio: bio || '',
+      avatarUrl: avatarUrl || '',
       theme: theme || 'gradient',
       updatedAt: new Date()
     }).onConflictDoUpdate({
@@ -30,6 +31,7 @@ export const POST: APIRoute = async (context) => {
         username: username || auth.userId.slice(0, 12),
         displayName: displayName || 'User',
         bio: bio || '',
+        avatarUrl: avatarUrl || '',
         theme: theme || 'gradient',
         updatedAt: new Date()
       }
@@ -59,6 +61,7 @@ export const POST: APIRoute = async (context) => {
       username: username || auth.userId.slice(0, 12),
       displayName: displayName || 'User',
       bio: bio || '',
+      avatarUrl: avatarUrl || '',
       theme: (theme as any) || 'gradient',
       links: links || []
     }

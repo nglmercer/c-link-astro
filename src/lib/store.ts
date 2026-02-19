@@ -210,6 +210,7 @@ export async function saveProfile(data: {
   username?: string
   displayName?: string
   bio?: string
+  avatarUrl?: string
   theme?: string
   links?: Link[]
 }): Promise<UserProfile | null> {

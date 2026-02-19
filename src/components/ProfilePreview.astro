@@ -59,6 +59,7 @@ const { username = '' } = Astro.props;
       username,
       displayName,
       bio,
+      avatarUrl: (window as any).currentAvatar || '',
       theme: currentTheme,
       links: (window as any).currentLinks || []
     };

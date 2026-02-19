@@ -62,7 +62,7 @@ const hasClaimedUsername = !!profile?.username
   </SignedOut>
 
   <SignedIn>
-    <div class="dashboard">
+    <div class="dashboard" data-default-avatar={defaultAvatar}>
       <div class="dashboard-header">
         <div class="header-info">
           <h1>My C-Link</h1>
@@ -91,8 +91,9 @@ const hasClaimedUsername = !!profile?.username
           <h2>Profile</h2>
           <ProfileForm 
             username={username}
-            displayName={profile?.displayName}
-            bio={profile?.bio}
+            displayName={profile?.displayName || defaultName}
+            bio={profile?.bio || 'Manage your personal link tree and profile identity.'}
+            avatarUrl={profile?.avatarUrl || defaultAvatar}
             theme={profile?.theme}
           />
         </div>
@@ -127,10 +128,12 @@ const hasClaimedUsername = !!profile?.username
   let checkTimeout: ReturnType<typeof setTimeout> | null = null;
   let currentLinks: Link[] = JSON.parse(document.getElementById('links-container')?.getAttribute('data-initial-links') || '[]');
   let currentTheme = (document.querySelector('.theme-option.active') as HTMLElement)?.dataset.theme || 'gradient';
+  let currentAvatar = document.querySelector('.dashboard')?.getAttribute('data-default-avatar') || '';
 
   // Expose for preview iframe
   (window as any).currentLinks = currentLinks;
   (window as any).currentTheme = currentTheme;
+  (window as any).currentAvatar = currentAvatar;
 
   // Elements
   const usernameInput = document.getElementById('username') as HTMLInputElement;
@@ -206,7 +209,8 @@ const hasClaimedUsername = !!profile?.username
         username: usernameVal,
         displayName: displayNameInput?.value?.trim() || '',
         bio: bioInput?.value?.trim() || '',
-        theme: currentTheme || undefined,
+        avatarUrl: currentAvatar,
+        theme: (currentTheme as any) || undefined,
         links: currentLinks
       });
       
@@ -499,10 +503,12 @@ const hasClaimedUsername = !!profile?.username
 
   .save-status.success {
     color: #10b981;
+    font-weight: 600;
   }
 
   .save-status.error {
     color: #ef4444;
+    font-weight: 600;
   }
 
   .save-status.saving {

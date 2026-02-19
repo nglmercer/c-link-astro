@@ -20,6 +20,7 @@ export async function findUserById(id: string): Promise<UserProfile | null> {
       username: userData.username,
       displayName: userData.displayName,
       bio: userData.bio || '',
+      avatarUrl: userData.avatarUrl || '',
       theme: userData.theme as any,
       links: linksData.map(l => ({
         id: l.id,
@@ -52,6 +53,7 @@ export async function findUserByUsername(username: string): Promise<UserProfile 
       username: userData.username,
       displayName: userData.displayName,
       bio: userData.bio || '',
+      avatarUrl: userData.avatarUrl || '',
       theme: userData.theme as any,
       links: linksData.map(l => ({
         id: l.id,

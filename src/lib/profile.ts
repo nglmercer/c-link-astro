@@ -382,8 +382,16 @@ export function updateProfileDisplay(profile: UserProfile): void {
   // Update avatar
   const avatarEl = document.getElementById('avatar')
   if (avatarEl) {
-    const text = profile.displayName || profile.username || '?'
-    avatarEl.textContent = text.charAt(0).toUpperCase()
+    if (profile.avatarUrl) {
+      avatarEl.textContent = ''
+      const img = document.createElement('img')
+      img.src = profile.avatarUrl
+      img.alt = profile.displayName || profile.username || 'Avatar'
+      avatarEl.appendChild(img)
+    } else {
+      const text = profile.displayName || profile.username || '?'
+      avatarEl.textContent = text.charAt(0).toUpperCase()
+    }
   }
 }
 
