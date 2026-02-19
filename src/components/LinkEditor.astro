@@ -128,10 +128,49 @@ function getDomain(url: string): string {
           </div>
         </div>
         
+        <div class="form-group thumbnail-selection">
+          <label>Thumbnail Type</label>
+          <div class="thumbnail-options">
+            <label class="thumbnail-option">
+              <input type="radio" name="thumb-type" value="platform" checked />
+              <div class="option-card">
+                <span class="material-symbols-outlined">category</span>
+                <span>Icon</span>
+              </div>
+            </label>
+            <label class="thumbnail-option">
+              <input type="radio" name="thumb-type" value="favicon" />
+              <div class="option-card">
+                <span class="material-symbols-outlined">language</span>
+                <span>Favicon</span>
+              </div>
+            </label>
+            <label class="thumbnail-option">
+              <input type="radio" name="thumb-type" value="preview" />
+              <div class="option-card">
+                <span class="material-symbols-outlined">visibility</span>
+                <span>Preview</span>
+              </div>
+            </label>
+            <label class="thumbnail-option">
+              <input type="radio" name="thumb-type" value="custom" />
+              <div class="option-card">
+                <span class="material-symbols-outlined">image</span>
+                <span>Custom</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div id="custom-image-group" class="form-group" style="display: none;">
+          <label for="link-image-input">Custom Image URL</label>
+          <input type="url" id="link-image-input" placeholder="https://example.com/image.png" />
+        </div>
+        
         <div class="form-row">
           <label class="toggle-label">
             <input type="checkbox" id="link-active" checked />
-            <span class="toggle-text">Active</span>
+            <span class="toggle-text">Active Link</span>
           </label>
         </div>
       </div>
@@ -188,21 +227,23 @@ function getDomain(url: string): string {
   import type { Link } from '../types/linktree';
   import { saveProfile } from '../lib/store';
 
+  // State
   let links: Link[] = [];
   let editingLinkId: string | null = null;
   let draggedItem: HTMLElement | null = null;
 
-  // Initialize with data from server
+  // Initialize with data from server attribute
   const linksContainer = document.getElementById('links-container');
   if (linksContainer) {
-    const linkCards = linksContainer.querySelectorAll('.link-card');
-    links = Array.from(linkCards).map((card) => ({
-      id: card.getAttribute('data-id') || '',
-      title: card.querySelector('.preview-title')?.textContent || '',
-      url: card.querySelector('.preview-url')?.textContent || '',
-      order: parseInt(card.getAttribute('data-index') || '0'),
-      isActive: true
-    }));
+    const rawLinks = linksContainer.getAttribute('data-initial-links');
+    if (rawLinks) {
+      try {
+        links = JSON.parse(rawLinks);
+        console.log('Initialized links:', links);
+      } catch (e) {
+        console.error('Error parsing initial links:', e);
+      }
+    }
   }
 
   // Modal elements
@@ -210,7 +251,11 @@ function getDomain(url: string): string {
   const modalTitle = document.getElementById('modal-title');
   const titleInput = document.getElementById('link-title-input') as HTMLInputElement;
   const urlInput = document.getElementById('link-url-input') as HTMLInputElement;
+  const imageInput = document.getElementById('link-image-input') as HTMLInputElement;
   const activeInput = document.getElementById('link-active') as HTMLInputElement;
+  const thumbTypeInputs = document.querySelectorAll('input[name="thumb-type"]') as NodeListOf<HTMLInputElement>;
+  const customImageGroup = document.getElementById('custom-image-group');
+  
   const previewTitle = document.getElementById('preview-title-display');
   const previewUrl = document.getElementById('preview-url-display');
   const previewIcon = document.getElementById('preview-card-icon');
@@ -268,14 +313,27 @@ function getDomain(url: string): string {
         if (modalTitle) modalTitle.textContent = 'Edit Link';
         if (titleInput) titleInput.value = link.title;
         if (urlInput) urlInput.value = link.url;
+        if (imageInput) imageInput.value = link.thumbnailUrl || '';
         if (activeInput) activeInput.checked = link.isActive;
+        
+        const thumbType = link.thumbnailType || 'platform';
+        thumbTypeInputs.forEach(input => {
+          input.checked = input.value === thumbType;
+        });
+        
+        if (customImageGroup) {
+          customImageGroup.style.display = thumbType === 'custom' ? 'block' : 'none';
+        }
       }
     } else {
       editingLinkId = null;
       if (modalTitle) modalTitle.textContent = 'Add Link';
       if (titleInput) titleInput.value = '';
       if (urlInput) urlInput.value = '';
+      if (imageInput) imageInput.value = '';
       if (activeInput) activeInput.checked = true;
+      thumbTypeInputs[0].checked = true; // platform default
+      if (customImageGroup) customImageGroup.style.display = 'none';
     }
     
     updatePreview();
@@ -296,23 +354,73 @@ function getDomain(url: string): string {
   function updatePreview() {
     const title = titleInput?.value || 'Link Title';
     const url = urlInput?.value || 'https://example.com';
+    const selectedThumbType = Array.from(thumbTypeInputs).find(i => i.checked)?.value || 'platform';
+    const customUrl = imageInput?.value?.trim();
     
     if (previewTitle) previewTitle.textContent = title;
     if (previewUrl) previewUrl.textContent = getDomainName(url);
     if (previewIcon) {
       previewIcon.innerHTML = '';
       
-      const faviconUrl = getFaviconUrl(url);
-      if (faviconUrl) {
+      if (selectedThumbType === 'favicon') {
+        const faviconUrl = getFaviconUrl(url);
+        if (faviconUrl) {
+          const img = document.createElement('img');
+          img.src = faviconUrl;
+          img.style.width = '24px';
+          img.style.height = '24px';
+          img.style.borderRadius = '4px';
+          
+          const span = document.createElement('span');
+          span.className = 'material-symbols-outlined';
+          span.textContent = getPlatformIcon(url);
+          span.style.display = 'none';
+          
+          img.onerror = () => {
+            img.style.display = 'none';
+            span.style.display = 'block';
+          };
+          
+          previewIcon.appendChild(img);
+          previewIcon.appendChild(span);
+        } else {
+          const span = document.createElement('span');
+          span.className = 'material-symbols-outlined';
+          span.textContent = getPlatformIcon(url);
+          previewIcon.appendChild(span);
+        }
+      } else if (selectedThumbType === 'preview') {
+        const previewUrl = `https://s1.wp.com/mshots/v1/${encodeURIComponent(url)}?w=200`;
         const img = document.createElement('img');
-        img.src = faviconUrl;
-        img.style.width = '24px';
-        img.style.height = '24px';
-        img.style.borderRadius = '4px';
+        img.src = previewUrl;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '10px';
         
         const span = document.createElement('span');
         span.className = 'material-symbols-outlined';
-        span.textContent = getPlatformIcon(url);
+        span.textContent = 'visibility';
+        span.style.display = 'none';
+        
+        img.onerror = () => {
+          img.style.display = 'none';
+          span.style.display = 'block';
+        };
+        
+        previewIcon.appendChild(img);
+        previewIcon.appendChild(span);
+      } else if (selectedThumbType === 'custom' && customUrl) {
+        const img = document.createElement('img');
+        img.src = customUrl;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '10px';
+        
+        const span = document.createElement('span');
+        span.className = 'material-symbols-outlined';
+        span.textContent = 'image';
         span.style.display = 'none';
         
         img.onerror = () => {
@@ -336,6 +444,8 @@ function getDomain(url: string): string {
     const title = titleInput?.value?.trim();
     const url = urlInput?.value?.trim();
     const isActive = activeInput?.checked ?? true;
+    const thumbnailType = (Array.from(thumbTypeInputs).find(i => i.checked)?.value || 'platform') as any;
+    const thumbnailUrl = imageInput?.value?.trim() || undefined;
     
     if (!title || !url) {
       alert('Please fill in both title and URL');
@@ -352,7 +462,7 @@ function getDomain(url: string): string {
     if (editingLinkId) {
       const index = links.findIndex(l => l.id === editingLinkId);
       if (index !== -1) {
-        links[index] = { ...links[index], title, url, isActive };
+        links[index] = { ...links[index], title, url, isActive, thumbnailType, thumbnailUrl };
       }
     } else {
       if (links.length >= 10) {
@@ -360,11 +470,13 @@ function getDomain(url: string): string {
         return;
       }
       links.push({
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         title,
         url,
         order: links.length,
-        isActive
+        isActive,
+        thumbnailType,
+        thumbnailUrl
       });
     }
     
@@ -492,18 +604,68 @@ function getDomain(url: string): string {
       const iconContainer = card.querySelector('.preview-icon') as HTMLElement;
       iconContainer.textContent = '';
       
-      const faviconUrl = getFaviconUrl(link.url);
-      if (faviconUrl) {
+      const thumbType = link.thumbnailType || 'platform';
+      
+      if (thumbType === 'favicon') {
+        const faviconUrl = getFaviconUrl(link.url);
+        if (faviconUrl) {
+          const img = document.createElement('img');
+          img.src = faviconUrl;
+          img.className = 'preview-favicon';
+          img.style.width = '20px';
+          img.style.height = '20px';
+          img.style.borderRadius = '4px';
+          
+          const span = document.createElement('span');
+          span.className = 'material-symbols-outlined';
+          span.textContent = getPlatformIcon(link.url);
+          span.style.display = 'none';
+          
+          img.onerror = () => {
+            img.style.display = 'none';
+            span.style.display = 'block';
+          };
+          
+          iconContainer.appendChild(img);
+          iconContainer.appendChild(span);
+        } else {
+          const span = document.createElement('span');
+          span.className = 'material-symbols-outlined';
+          span.textContent = getPlatformIcon(link.url);
+          iconContainer.appendChild(span);
+        }
+      } else if (thumbType === 'preview') {
+        const previewUrl = `https://s1.wp.com/mshots/v1/${encodeURIComponent(link.url)}?w=200`;
         const img = document.createElement('img');
-        img.src = faviconUrl;
-        img.className = 'preview-favicon';
-        img.style.width = '20px';
-        img.style.height = '20px';
-        img.style.borderRadius = '4px';
+        img.src = previewUrl;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '8px';
         
         const span = document.createElement('span');
         span.className = 'material-symbols-outlined';
-        span.textContent = getPlatformIcon(link.url);
+        span.textContent = 'visibility';
+        span.style.display = 'none';
+        
+        img.onerror = () => {
+          img.style.display = 'none';
+          span.style.display = 'block';
+        };
+        
+        iconContainer.appendChild(img);
+        iconContainer.appendChild(span);
+      } else if (thumbType === 'custom' && link.thumbnailUrl) {
+        const img = document.createElement('img');
+        img.src = link.thumbnailUrl;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '8px';
+        
+        const span = document.createElement('span');
+        span.className = 'material-symbols-outlined';
+        span.textContent = 'image';
         span.style.display = 'none';
         
         img.onerror = () => {
@@ -537,6 +699,14 @@ function getDomain(url: string): string {
   // Save to Clerk
   async function saveToClerk() {
     try {
+      // Use the global save function from dashboard if available
+      const globalSave = (window as any).saveToClerkFromEditor;
+      if (globalSave) {
+        await globalSave();
+        return;
+      }
+
+      // Fallback to direct API call if not in dashboard
       const usernameInput = document.getElementById('username') as HTMLInputElement;
       const displayNameInput = document.getElementById('displayName') as HTMLInputElement;
       const bioInput = document.getElementById('bio') as HTMLTextAreaElement;
@@ -566,6 +736,16 @@ function getDomain(url: string): string {
   titleInput?.addEventListener('input', updatePreview);
   urlInput?.addEventListener('click', updatePreview);
   urlInput?.addEventListener('input', updatePreview);
+  imageInput?.addEventListener('input', updatePreview);
+
+  thumbTypeInputs.forEach(input => {
+    input.addEventListener('change', () => {
+      if (customImageGroup) {
+        customImageGroup.style.display = input.value === 'custom' ? 'block' : 'none';
+      }
+      updatePreview();
+    });
+  });
 
   // Enable drag and drop on container
   if (linksContainer) {
@@ -909,6 +1089,62 @@ function getDomain(url: string): string {
     outline: none;
     border-color: #2563eb;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  /* Thumbnail Selection Styles */
+  .thumbnail-selection {
+    margin-bottom: 1.5rem;
+  }
+
+  .thumbnail-options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .thumbnail-option {
+    cursor: pointer;
+    position: relative;
+  }
+
+  .thumbnail-option input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .option-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .option-card span:last-child {
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .thumbnail-option input:checked + .option-card {
+    background: #2563eb08;
+    border-color: #2563eb;
+    color: #2563eb;
+  }
+
+  .thumbnail-option:hover .option-card {
+    border-color: #d1d5db;
+  }
+
+  .thumbnail-option input:checked:hover .option-card {
+    border-color: #2563eb;
   }
 
   .link-preview-section {

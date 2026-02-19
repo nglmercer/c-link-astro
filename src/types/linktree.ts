@@ -5,6 +5,8 @@ export interface Link {
   icon?: string
   order: number
   isActive: boolean
+  thumbnailType?: 'favicon' | 'preview' | 'custom'
+  thumbnailUrl?: string
 }
 
 export type ThemeName = 'light' | 'dark' | 'gradient' | 'ocean' | 'sunset' | 'forest' | 'midnight' | 'cyberpunk' | 'marshmallow' | 'emerald'

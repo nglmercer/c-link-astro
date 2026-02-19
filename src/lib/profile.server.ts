@@ -27,7 +27,9 @@ export async function findUserById(id: string): Promise<UserProfile | null> {
         title: l.title,
         url: l.url,
         order: l.order,
-        isActive: l.isActive
+        isActive: l.isActive,
+        thumbnailType: l.thumbnailType as any,
+        thumbnailUrl: l.thumbnailUrl || undefined
       }))
     }
   } catch (error) {
@@ -60,7 +62,9 @@ export async function findUserByUsername(username: string): Promise<UserProfile 
         title: l.title,
         url: l.url,
         order: l.order,
-        isActive: l.isActive
+        isActive: l.isActive,
+        thumbnailType: l.thumbnailType as any,
+        thumbnailUrl: l.thumbnailUrl || undefined
       }))
     }
   } catch (error) {

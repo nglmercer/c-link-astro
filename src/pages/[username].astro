@@ -75,7 +75,8 @@ const themeConfig = themes[initialTheme] || themes[DEFAULT_THEME]
           {profile?.links?.map((link, index) => {
             const platform = getPlatformIcon(link.url)
             const domain = getDomain(link.url)
-            const favicon = getFaviconUrl(link.url)
+            const thumbType = link.thumbnailType || 'favicon'
+            
             return (
               <li class="link-item" style={`animation-delay: ${index * 0.1}s`}>
                 <a 
@@ -85,15 +86,52 @@ const themeConfig = themes[initialTheme] || themes[DEFAULT_THEME]
                   class="link-card"
                 >
                   <div class="link-icon" style={`background: ${platform.color}15; color: ${platform.color}`}>
-                    {favicon ? (
-                      <img 
-                        src={favicon} 
-                        alt="" 
-                        class="link-favicon" 
-                        onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                      />
-                    ) : null}
-                    <span class="material-symbols-outlined" style={favicon ? "display: none;" : ""}>{platform.icon}</span>
+                    {(() => {
+                      if (thumbType === 'favicon') {
+                        const faviconUrl = getFaviconUrl(link.url);
+                        return faviconUrl ? (
+                          <>
+                            <img 
+                              src={faviconUrl} 
+                              alt="" 
+                              class="link-favicon" 
+                              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                            />
+                            <span class="material-symbols-outlined" style="display: none;">{platform.icon}</span>
+                          </>
+                        ) : (
+                          <span class="material-symbols-outlined">{platform.icon}</span>
+                        );
+                      } else if (thumbType === 'preview') {
+                        const previewUrl = `https://s1.wp.com/mshots/v1/${encodeURIComponent(link.url)}?w=200`;
+                        return (
+                          <>
+                            <img 
+                              src={previewUrl} 
+                              alt="" 
+                              class="link-favicon" 
+                              style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;"
+                              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                            />
+                            <span class="material-symbols-outlined" style="display: none;">visibility</span>
+                          </>
+                        );
+                      } else if (thumbType === 'custom' && link.thumbnailUrl) {
+                        return (
+                          <>
+                            <img 
+                              src={link.thumbnailUrl} 
+                              alt="" 
+                              class="link-favicon" 
+                              style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;"
+                              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                            />
+                            <span class="material-symbols-outlined" style="display: none;">image</span>
+                          </>
+                        );
+                      }
+                      return <span class="material-symbols-outlined">{platform.icon}</span>;
+                    })()}
                   </div>
                   <div class="link-content">
                     <span class="link-title">{link.title}</span>

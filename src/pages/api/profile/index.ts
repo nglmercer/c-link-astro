@@ -49,7 +49,9 @@ export const POST: APIRoute = async (context) => {
           title: link.title,
           url: link.url,
           order: index,
-          isActive: link.isActive !== undefined ? link.isActive : true
+          isActive: link.isActive !== undefined ? link.isActive : true,
+          thumbnailType: link.thumbnailType || 'favicon',
+          thumbnailUrl: link.thumbnailUrl || null
         }))
         
         await db.insert(Link).values(linksToInsert)

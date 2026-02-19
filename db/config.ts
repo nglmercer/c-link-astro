@@ -20,6 +20,8 @@ const Link = defineTable({
     url: column.text(),
     order: column.number(),
     isActive: column.boolean({ default: true }),
+    thumbnailType: column.text({ default: 'favicon' }), // favicon, preview, custom
+    thumbnailUrl: column.text({ optional: true }),
   }
 });
 

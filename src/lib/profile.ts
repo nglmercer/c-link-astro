@@ -336,17 +336,48 @@ export function displayLinks(container: HTMLElement, links: LinkType[], themeNam
     // Clear old icon/image
     iconWrapper.textContent = ''
     
-    if (favicon) {
+    const thumbType = link.thumbnailType || 'favicon'
+    
+    if (thumbType === 'favicon') {
+      const favicon = getFaviconUrl(link.url)
+      if (favicon) {
+        const img = document.createElement('img')
+        img.src = favicon
+        img.className = 'link-favicon'
+        img.style.width = '24px'
+        img.style.height = '24px'
+        img.style.borderRadius = '4px'
+        
+        const span = document.createElement('span')
+        span.className = 'material-symbols-outlined'
+        span.textContent = platform.icon
+        span.style.display = 'none'
+        
+        img.onerror = () => {
+          img.style.display = 'none'
+          span.style.display = 'block'
+        }
+        
+        iconWrapper.appendChild(img)
+        iconWrapper.appendChild(span)
+      } else {
+        const span = document.createElement('span')
+        span.className = 'material-symbols-outlined'
+        span.textContent = platform.icon
+        iconWrapper.appendChild(span)
+      }
+    } else if (thumbType === 'custom' && link.thumbnailUrl) {
       const img = document.createElement('img')
-      img.src = favicon
-      img.className = 'link-favicon'
-      img.style.width = '24px'
-      img.style.height = '24px'
-      img.style.borderRadius = '4px'
+      img.src = link.thumbnailUrl
+      img.className = 'link-custom-image'
+      img.style.width = '100%'
+      img.style.height = '100%'
+      img.style.objectFit = 'cover'
+      img.style.borderRadius = '8px'
       
       const span = document.createElement('span')
       span.className = 'material-symbols-outlined'
-      span.textContent = platform.icon
+      span.textContent = 'image'
       span.style.display = 'none'
       
       img.onerror = () => {

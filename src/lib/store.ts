@@ -8,6 +8,8 @@ export interface Link {
   icon?: string
   order: number
   isActive: boolean
+  thumbnailType?: 'favicon' | 'preview' | 'custom' | 'platform'
+  thumbnailUrl?: string
 }
 
 export interface UserProfile {
