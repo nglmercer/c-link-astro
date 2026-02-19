@@ -1,7 +1,127 @@
 ---
 import Layout from '../layouts/Layout.astro'
+import { SignedIn, SignedOut } from '@clerk/astro/components'
 ---
 
-<Layout title="Clerk + Astro">
-  <p>Sign in to try Clerk out!</p>
+<Layout title="C-Link - Your Personal Link Tree">
+  <div class="hero">
+    <div class="hero-content">
+      <h1>Welcome to C-Link</h1>
+      <p class="subtitle">Create your personal link tree and share all your links in one place</p>
+      
+      <SignedIn>
+        <a href="/dashboard" class="cta-button">Go to Dashboard</a>
+      </SignedIn>
+      
+      <SignedOut>
+        <p class="cta-text">Sign in to create your own link tree</p>
+      </SignedOut>
+    </div>
+    
+    <div class="features">
+      <div class="feature">
+        <h3>🌐 Custom Profile</h3>
+        <p>Personalize your page with your name, bio, and avatar</p>
+      </div>
+      <div class="feature">
+        <h3>🔗 Manage Links</h3>
+        <p>Add, edit, and organize all your important links</p>
+      </div>
+      <div class="feature">
+        <h3>📱 Mobile Friendly</h3>
+        <p>Looks great on any device</p>
+      </div>
+    </div>
+  </div>
 </Layout>
+
+<style>
+  .hero {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    text-align: center;
+  }
+
+  .hero-content {
+    max-width: 600px;
+    margin-bottom: 3rem;
+  }
+
+  h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    margin: 0 0 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 1.25rem;
+    color: #666;
+    margin: 0 0 2rem;
+  }
+
+  .cta-button {
+    display: inline-block;
+    background: #2563eb;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: background 0.2s, transform 0.2s;
+  }
+
+  .cta-button:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+  }
+
+  .cta-text {
+    color: #666;
+  }
+
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    max-width: 800px;
+    width: 100%;
+  }
+
+  .feature {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    text-align: center;
+  }
+
+  .feature h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.1rem;
+  }
+
+  .feature p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 600px) {
+    h1 {
+      font-size: 2rem;
+    }
+    
+    .subtitle {
+      font-size: 1rem;
+    }
+  }
+</style>

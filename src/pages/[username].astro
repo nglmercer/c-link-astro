@@ -1,0 +1,323 @@
+---
+import Layout from '../layouts/Layout.astro'
+
+const { username } = Astro.params
+
+// Prevent accessing reserved routes
+const reservedRoutes = ['dashboard', 'signin', 'api', 'assets', 'favicon', 'index']
+if (!username || reservedRoutes.includes(username)) {
+  return Astro.redirect('/')
+}
+
+// Default profile for SSR (data will be loaded client-side)
+const displayProfile = {
+  username: username,
+  displayName: username.charAt(0).toUpperCase() + username.slice(1),
+  bio: 'Check out my links below!',
+  avatarUrl: undefined,
+  theme: 'gradient',
+  links: []
+}
+---
+
+<Layout title={`${displayProfile.displayName} - Link Tree`}>
+  <div class="profile-page">
+    <div class="profile-header">
+      <div class="avatar-placeholder">
+        {displayProfile.displayName.charAt(0).toUpperCase()}
+      </div>
+      <h1 class="display-name" id="display-name">{displayProfile.displayName}</h1>
+      <p class="username">@{username}</p>
+      <p class="bio" id="bio"></p>
+    </div>
+
+    <div class="links-container">
+      <div id="loading-links" class="loading">Loading links...</div>
+      <ul class="links-list" id="links-list-container" style="display: none;">
+      </ul>
+      <div class="empty-links" id="empty-links" style="display: none;">
+        <p>No links yet!</p>
+        <p class="hint">This user hasn't added any links.</p>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <a href="/dashboard" class="footer-link">Create your own link tree</a>
+    </footer>
+  </div>
+</Layout>
+
+<script define:vars={{ username }}>
+  // Fetch profile from Clerk API
+  async function loadProfile() {
+    try {
+      const response = await fetch(`/api/profile/${username}`)
+      
+      if (!response.ok) {
+        showEmpty()
+        return
+      }
+      
+      const data = await response.json()
+      
+      if (!data.profile) {
+        showEmpty()
+        return
+      }
+      
+      const profile = data.profile
+      
+      // Update display
+      const displayNameEl = document.getElementById('display-name')
+      const bioEl = document.getElementById('bio')
+      
+      if (profile.displayName && displayNameEl) {
+        displayNameEl.textContent = profile.displayName
+      }
+      
+      if (profile.bio && bioEl) {
+        bioEl.textContent = profile.bio
+      }
+      
+      // Update avatar
+      const avatarPlaceholder = document.querySelector('.avatar-placeholder')
+      if (avatarPlaceholder) {
+        if (profile.displayName) {
+          avatarPlaceholder.textContent = profile.displayName.charAt(0).toUpperCase()
+        }
+      }
+      
+      // Render links
+      const links = profile.links || []
+      
+      if (links.length === 0) {
+        showEmpty()
+        return
+      }
+      
+      renderLinks(links)
+      
+    } catch (error) {
+      console.error('Error loading profile:', error)
+      showEmpty()
+    }
+  }
+
+  function showEmpty() {
+    document.getElementById('loading-links').style.display = 'none'
+    document.getElementById('empty-links').style.display = 'block'
+  }
+
+  function renderLinks(links) {
+    const container = document.getElementById('links-list-container')
+    const loadingEl = document.getElementById('loading-links')
+    const emptyEl = document.getElementById('empty-links')
+    
+    if (!container) return
+    
+    loadingEl.style.display = 'none'
+    emptyEl.style.display = 'none'
+    container.style.display = 'flex'
+    
+    container.innerHTML = links.map((link, index) => `
+      <li class="link-item" style="animation-delay: ${index * 0.1}s">
+        <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="link-button">
+          <span class="link-title">${escapeHtml(link.title)}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="external-icon">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+        </a>
+      </li>
+    `).join('')
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div')
+    div.textContent = text
+    return div.innerHTML
+  }
+
+  // Load profile on page load
+  loadProfile()
+</script>
+
+<style>
+  .profile-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3rem 1rem;
+    background: linear-gradient(180deg, #f0f9ff 0%, #fff 100%);
+  }
+
+  .profile-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .avatar, .avatar-placeholder {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    object-fit: cover;
+  }
+
+  .avatar-placeholder {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 600;
+  }
+
+  .display-name {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+    color: #111;
+  }
+
+  .username {
+    font-size: 1rem;
+    color: #666;
+    margin: 0 0 0.75rem;
+  }
+
+  .bio {
+    font-size: 0.95rem;
+    color: #444;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  .links-container {
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+  }
+
+  .links-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .link-item {
+    animation: slideIn 0.4s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  @keyframes slideIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .link-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 1rem 1.25rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #111;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  .link-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #d1d5db;
+  }
+
+  .link-button:active {
+    transform: translateY(0);
+  }
+
+  .link-title {
+    font-size: 1rem;
+  }
+
+  .external-icon {
+    opacity: 0.5;
+    transition: opacity 0.2s;
+  }
+
+  .link-button:hover .external-icon {
+    opacity: 1;
+  }
+
+  .empty-links {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: white;
+    border-radius: 12px;
+    border: 1px dashed #d1d5db;
+  }
+
+  .empty-links p {
+    margin: 0;
+    color: #666;
+  }
+
+  .empty-links .hint {
+    font-size: 0.875rem;
+    color: #999;
+    margin-top: 0.5rem;
+  }
+
+  .footer {
+    margin-top: auto;
+    padding-top: 2rem;
+  }
+
+  .footer-link {
+    color: #666;
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.2s;
+  }
+
+  .footer-link:hover {
+    color: #111;
+  }
+
+  @media (max-width: 600px) {
+    .profile-page {
+      padding: 2rem 1rem;
+    }
+
+    .display-name {
+      font-size: 1.5rem;
+    }
+
+    .link-button {
+      padding: 0.875rem 1rem;
+    }
+
+    .link-title {
+      font-size: 0.95rem;
+    }
+  }
+</style>
